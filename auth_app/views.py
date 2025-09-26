@@ -3,40 +3,44 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.contrib.auth.forms import UserCreationForm
 
 # Login
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-
 def login_view(request):
     if request.method == "POST":
-        username = request.POST["username"]
-        password = request.POST["password"]
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            # 🚀 Redirige según el tipo de usuario
-            if user.is_superuser:
-                return redirect("dashboard")  # admin
-            elif user.is_staff:
-                return redirect("dashboard_profesor")  # profesor
-            else:
-                return redirect("dashboard")  # usuario normal
+            return redirect("dashboard")  # 👈 cambia a la vista de tu dashboard
+        else:
+            messages.error(request, "Usuario o contraseña incorrectos")
+
     return render(request, "login.html")
 
-# Registro
 
+# Registro
 def register_view(request):
     if request.method == "POST":
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)  # iniciar sesión automáticamente
-            return redirect("dashboard")
-    else:
-        form = UserCreationForm()
-    return render(request, "register.html", {"form": form})
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        password1 = request.POST.get("password1")
+        password2 = request.POST.get("password2")
+
+        if password1 != password2:
+            messages.error(request, "Las contraseñas no coinciden")
+            return render(request, "register.html")
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "El usuario ya existe")
+            return render(request, "register.html")
+
+        user = User.objects.create_user(username=username, email=email, password=password1)
+        login(request, user)
+        return redirect("dashboard")  # 👈 cambia a la vista de tu dashboard
+
+    return render(request, "register.html")
 
 
 # Logout
