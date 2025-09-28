@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Foros - EduConnect+</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: #f4f9ff;
+    }
+    .forum-header {
+      background: #0d6efd;
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .forum-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .forum-card:hover {
+      transform: translateY(-3px);
+    }
+    .btn-create {
+      background: #0d6efd;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 500;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .btn-create:hover {
+      background: #0b5ed7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <!-- Encabezado -->
+    <div class="forum-header">
+      <h2>💬 Foros de la Comunidad</h2>
+      <p>Participa en los temas, comparte ideas y resuelve dudas con otros usuarios</p>
+    </div>
+
+    <!-- Lista de foros -->
+    <div class="forum-card">
+      <h5>Tema 1: Bienvenida a EduConnect+</h5>
+      <p>Preséntate y conoce a otros estudiantes 🚀</p>
+    </div>
+    <div class="forum-card">
+      <h5>Tema 2: Sugerencias y mejoras</h5>
+      <p>Comparte tus ideas para hacer EduConnect+ aún mejor 💡</p>
+    </div>
+    <div class="forum-card">
+      <h5>Tema 3: Recursos recomendados</h5>
+      <p>Publica libros, cursos o enlaces útiles 📘</p>
+    </div>
+
+    <!-- Botón nuevo tema -->
+    <div class="text-center mt-4">
+      <a href="#" class="btn btn-create">➕ Crear nuevo tema</a>
+    </div>
+  </div>
+</body>
+</html>

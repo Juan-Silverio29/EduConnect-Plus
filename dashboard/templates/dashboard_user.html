@@ -78,8 +78,8 @@
       <h2>EduConnect</h2>
       <a href="#" class="active">🏠 Dashboard</a>
       <a href="#">📘 Mis Recursos</a>
-      <a href="#">💬 Foros</a>
-      <a href="#">📊 Mi Progreso</a>
+      <a href="{% url 'foros' %}">💬 Foros</a>
+      <a href="{% url 'logros_recursos_completados' %}">📊 Mi Progreso</a>
       <a href="#">⚙️ Configuración</a>
       <a href="{% url 'logout' %}" class="logout">🚪 Cerrar Sesión</a>
     </div>

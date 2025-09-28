@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Encabezado -->
+    <div class="text-center mb-4">
+        <h2 style="color:#0d6efd;">🎓 Logros y Recursos Completados</h2>
+        <p class="text-muted">Aquí puedes ver todos los recursos que has completado en EduConnect+</p>
+    </div>
+
+    <!-- Tarjetas de logros -->
+    <div class="row">
+        {% for logro in logros %}
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0" style="border-radius:12px;">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ logro.titulo }}</h5>
+                    <p class="card-text">{{ logro.descripcion }}</p>
+                    {% if logro.fecha_completado %}
+                        <p class="text-muted">Finalizado: {{ logro.fecha_completado }}</p>
+                    {% endif %}
+                    <span class="badge bg-success">✅ Completado</span>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-muted">Todavía no has completado recursos.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Botón para seguir explorando recursos -->
+    <div class="text-center mt-4">
+        <a href="/resources/" class="btn btn-primary" style="border-radius:8px;">
+            📘 Explorar más recursos
+        </a>
+    </div>
+</div>
+{% endblock %}

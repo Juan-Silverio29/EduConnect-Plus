@@ -18,10 +18,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('landing.urls')),         # Página principal
     path('auth/', include('auth_app.urls')),   # Login y Registro
     path('dashboard/', include('dashboard.urls')), # Dashboards
+    path("resources/", include("resources.urls")),
+    path("forum/", include("forum.urls")),
+
 ]
 
