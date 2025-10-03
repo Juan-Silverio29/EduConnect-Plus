@@ -1,20 +1,11 @@
-# Ignorar entornos virtuales
-venv/
-ENV/
-
-# Archivos compilados de Python
-*.pyc
 __pycache__/
+*.pyc
 *.pyo
-
-# Archivos de logs
-*.log
-
-# Bases de datos SQLite (si las usas en local)
+*.pyd
+.Python
+env/
+venv/
+.venv/
+staticfiles/
 *.sqlite3
-
-# Configuración de VSCode
-.vscode/
-
-# Archivos del sistema
 .DS_Store

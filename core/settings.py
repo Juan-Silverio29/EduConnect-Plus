@@ -94,7 +94,7 @@ DATABASES = {
         "NAME": "postgres",  # nombre de tu BD en RDS
         "USER": "postgres",  # usuario
         "PASSWORD": "admin404",  # contraseña
-        "HOST": "data-base1.c1uegi2mqp0w.us-east-2.rds.amazonaws.com",  # endpoint de RDS
+        "HOST": "db-educonect-free.c1uegi2mqp0w.us-east-2.rds.amazonaws.com",
         "PORT": "5432",  # puerto de RDS       
     }
 }
