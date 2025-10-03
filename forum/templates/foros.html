@@ -9,25 +9,15 @@
     body {
       background: #f4f9ff;
     }
-    .forum-header {
-      background: #0d6efd;
-      color: white;
-      padding: 20px;
-      border-radius: 12px;
-      text-align: center;
-      margin-bottom: 30px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
     .forum-card {
-      background: white;
+      background: #ffffff;
       border-radius: 12px;
       padding: 20px;
       margin-bottom: 15px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
     }
-    .forum-card:hover {
-      transform: translateY(-3px);
+    .forum-card h5 {
+      color: #0d6efd;
     }
     .btn-create {
       background: #0d6efd;
@@ -35,20 +25,31 @@
       border-radius: 8px;
       padding: 10px 20px;
       font-weight: 500;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      color: white;
+      text-decoration: none;
     }
     .btn-create:hover {
       background: #0b5ed7;
+      color: white;
+    }
+    .btn-back {
+      background: #6c757d;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 500;
+      color: white;
+      text-decoration: none;
+    }
+    .btn-back:hover {
+      background: #5a6268;
+      color: white;
     }
   </style>
 </head>
 <body>
-  <div class="container mt-4">
-    <!-- Encabezado -->
-    <div class="forum-header">
-      <h2>💬 Foros de la Comunidad</h2>
-      <p>Participa en los temas, comparte ideas y resuelve dudas con otros usuarios</p>
-    </div>
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">💬 Foros de la Comunidad</h2>
 
     <!-- Lista de foros -->
     <div class="forum-card">
@@ -64,9 +65,10 @@
       <p>Publica libros, cursos o enlaces útiles 📘</p>
     </div>
 
-    <!-- Botón nuevo tema -->
+    <!-- Botones -->
     <div class="text-center mt-4">
-      <a href="#" class="btn btn-create">➕ Crear nuevo tema</a>
+      <a href="#" class="btn-create">➕ Crear nuevo tema</a>
+      <a href="{% url 'dashboard_user' %}" class="btn-back ms-2">⬅️ Regresar</a>
     </div>
   </div>
 </body>
