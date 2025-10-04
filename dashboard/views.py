@@ -19,3 +19,6 @@ def dashboard_view(request):
 @login_required
 def dashboard_profesor(request):
     return render(request, "dashboard_profesor.html")
+
+def dashboard_user(request):
+    return render(request, "dashboard_user.html")
