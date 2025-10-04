@@ -5,121 +5,51 @@
   <meta charset="UTF-8">
   <title>Dashboard Usuario - EduConnect+</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
   <style>
     body {
       background: #f4f9ff;
     }
     .sidebar {
       height: 100vh;
-      background: #0d1b2a;
+      background: #0d6efd;
       color: white;
       padding: 20px;
-    }
-    .sidebar h2 {
-      font-size: 1.5rem;
-      margin-bottom: 2rem;
     }
     .sidebar a {
       color: white;
       text-decoration: none;
       display: block;
-      padding: 12px;
-      margin-bottom: 10px;
+      padding: 10px;
       border-radius: 8px;
-      font-weight: 500;
     }
-    .sidebar a:hover, .sidebar a.active {
-      background: #0d6efd;
-    }
-    .sidebar a.logout {
-      background: #e63946;
-    }
-    .sidebar a.logout:hover {
-      background: #c1121f;
-    }
-    .welcome-card {
-      background: linear-gradient(135deg, #6c63ff, #3f37c9);
-      color: white;
-      border-radius: 15px;
-      padding: 25px;
-      margin-bottom: 20px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-    }
-    .stat-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      font-weight: 500;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    .stat-card h5 {
-      margin-bottom: 10px;
-    }
-    .stat-blue {
-      border-top: 5px solid #0d6efd;
-    }
-    .stat-green {
-      border-top: 5px solid #2a9d8f;
-    }
-    .stat-orange {
-      border-top: 5px solid #f77f00;
-    }
-    .stat-purple {
-      border-top: 5px solid #9d4edd;
+    .sidebar a:hover {
+      background: #004aad;
     }
   </style>
 </head>
 <body>
   <div class="d-flex">
-    <!-- Sidebar -->
     <div class="sidebar">
+<<<<<<< HEAD
       <h2>EduConnect</h2>
       <a href="#" class="active">🏠 Dashboard</a>
       <a href="#">📘 Mis Recursos</a>
       <a href="{% url 'foros' %}">💬 Foros</a>
       <a href="{% url 'logros_recursos_completados' %}">📊 Mi Progreso</a>
+=======
+      <h2 class="mb-4">Usuario</h2>
+      <a href="#">📘 Cursos</a>
+      <a href="#">📊 Progreso</a>
+>>>>>>> dev
       <a href="#">⚙️ Configuración</a>
-      <a href="{% url 'logout' %}" class="logout">🚪 Cerrar Sesión</a>
+      <a href="{% url 'logout' %}">🚪 Cerrar sesión</a>
     </div>
-
-    <!-- Main Content -->
     <div class="p-4 flex-grow-1">
-      <!-- Card bienvenida -->
-      <div class="welcome-card">
-        <h2>👋 Hola, {{ user.username }}!</h2>
-        <p>Bienvenido a tu panel personalizado de EduConnect 🚀</p>
-      </div>
-
-      <!-- Stats -->
-      <div class="row">
-        <div class="col-md-3 mb-3">
-          <div class="stat-card stat-blue">
-            <h5>Recursos Completados</h5>
-            <p>0</p>
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <div class="stat-card stat-green">
-            <h5>Tiempo de Estudio</h5>
-            <p>0h</p>
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <div class="stat-card stat-orange">
-            <h5>Logros Obtenidos</h5>
-            <p>0</p>
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <div class="stat-card stat-purple">
-            <h5>Recursos Nuevos</h5>
-            <p>0</p>
-          </div>
-        </div>
-      </div>
+      <h1 class="text-primary">Bienvenido {{ user.username }}</h1>
+      <p>Aquí encontrarás tu progreso, cursos y más.</p>
     </div>
   </div>
 </body>
 </html>
+<footer class="footer">
+    <p>&copy; 2024 EduConnect+. Todos los derechos reservados.</p>
