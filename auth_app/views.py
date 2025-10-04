@@ -54,7 +54,7 @@ def register_view(request):
         user = authenticate(username=username, password=password1)
         if user is not None:
             login(request, user)          
-            # 🚀 Redirigir según el rol
+            # Redirigir según el rol
             if rol == "profesor":
                 return redirect("dashboard_profesor")
             elif rol == "mentor":
