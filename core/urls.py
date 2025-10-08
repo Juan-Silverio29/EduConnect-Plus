@@ -26,6 +26,8 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls')), # Dashboards
     path("resources/", include("resources.urls")),
     path("forum/", include("forum.urls")),
+    path("dashboard/", include("dashboard.urls")),
+
 
 ]
 
