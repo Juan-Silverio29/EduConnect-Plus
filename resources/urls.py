@@ -1,10 +1,11 @@
 from django.urls import path
-from resources import views   # 👈 import absoluto para evitar warnings
+from . import views
 
 urlpatterns = [
-    path(
-        "logros/",
-        views.logros_recursos_completados,
-        name="logros_recursos_completados"
-    ),
+    path('', views.lista_recursos, name="lista_recursos"),
+    path('subir/', views.subir_recurso, name="subir_recurso"),
+    path('logros/', views.logros_recursos_completados, name="logros_recursos_completados"),
+    path("lista/", views.lista_recursos, name="lista_recursos"),
+    path("editar/<int:recurso_id>/", views.editar_recurso, name="editar_recurso"),  # 👈 importante
+    path("eliminar/<int:recurso_id>/", views.eliminar_recurso, name="eliminar_recurso"),
 ]

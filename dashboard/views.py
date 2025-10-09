@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from resources.models import Recursos
 
 @login_required
 def dashboard_view(request):
@@ -22,3 +23,19 @@ def dashboard_profesor(request):
 
 def dashboard_user(request):
     return render(request, "dashboard_user.html")
+
+@login_required
+def logros_recursos_completados(request):
+    recursos = Recursos.objects.filter(completado=True)
+    total_recursos = Recursos.objects.count()
+
+    # Calcular porcentaje de progreso
+    progreso = 0
+    if total_recursos > 0:
+        progreso = int((recursos.count() / total_recursos) * 100)
+
+    return render(request, "logros_recursos_completados.html", {
+        "recursos": recursos,
+        "total_recursos": total_recursos,
+        "progreso": progreso
+    })
