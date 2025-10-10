@@ -1,4 +1,3 @@
-
 __pycache__/
 *.pyc
 *.pyo
@@ -10,4 +9,3 @@ venv/
 staticfiles/
 *.sqlite3
 .DS_Store
-
