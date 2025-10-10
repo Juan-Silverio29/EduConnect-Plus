@@ -9,7 +9,7 @@
 <body class="container mt-4">
     <h2>Crear un nuevo tema</h2>
 
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">  <!-- 👈 enctype agregado -->
         {% csrf_token %}
         <div class="mb-3">
             <label for="titulo" class="form-label">Título</label>
@@ -18,6 +18,10 @@
         <div class="mb-3">
             <label for="descripcion" class="form-label">Descripción</label>
             <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="archivo" class="form-label">Adjuntar archivo (opcional)</label>
+            <input type="file" class="form-control" id="archivo" name="archivo">
         </div>
         <button type="submit" class="btn btn-primary">Crear</button>
         <a href="{% url 'foros' %}" class="btn btn-secondary">Cancelar</a>
