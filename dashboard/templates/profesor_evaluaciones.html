@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Evaluaciones del Profesor</h1>
+
+<ul>
+{% for eval in evaluaciones %}
+    <li>
+        <strong>{{ eval.nombre }}</strong> - Curso: {{ eval.curso }} - Fecha: {{ eval.fecha }}
+    </li>
+{% empty %}
+    <li>No hay evaluaciones programadas.</li>
+{% endfor %}
+</ul>
+{% endblock %}

@@ -29,7 +29,9 @@ urlpatterns = [
     path("resources/", include("resources.urls")),
     path("forum/", include("forum.urls")),
     path("dashboard/", include("dashboard.urls")),
-    
+    path('api/auth/', include('auth_app.api_urls')),
+
+    #path('api/auth/', include('auth_app.api_urls')),
 
 
 ] 

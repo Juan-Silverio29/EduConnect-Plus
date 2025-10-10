@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Cursos del Profesor</h1>
+
+<ul>
+{% for curso in cursos %}
+    <li>
+        <strong>{{ curso.nombre }}</strong> - Grupo {{ curso.grupo }} - {{ curso.alumnos }} alumnos
+    </li>
+{% empty %}
+    <li>No hay cursos asignados.</li>
+{% endfor %}
+</ul>
+{% endblock %}

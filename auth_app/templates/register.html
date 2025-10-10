@@ -1,29 +1,21 @@
-{% if messages %}
-  <div class="alert alert-danger">
-    {% for message in messages %}
-      <p>{{ message }}</p>
-    {% endfor %}
-  </div>
-{% endif %}
-
-<!-- auth_app/templates/login.html -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Registro - EduConnect+</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
       background: linear-gradient(135deg, #0d6efd, #6c63ff);
       height: 100vh;
       display: flex;
-      align-items: flex-start; /* 👈 ahora empieza arriba */
+      align-items: flex-start;
       justify-content: center;
-      padding: 40px 0; /* espacio arriba y abajo */
-      overflow-y: auto; /* permite scroll si es necesario */
-      
+      padding: 40px 0;
+      overflow-y: auto;
+      font-family: 'Poppins', sans-serif;
     }
     .card {
       border-radius: 20px;
@@ -31,7 +23,7 @@
       padding: 2rem;
       background: #fff;
       width: 100%;
-      max-width: 450px;
+      max-width: 500px;
     }
     .btn-primary {
       border-radius: 25px;
@@ -40,111 +32,120 @@
       border: none;
       transition: 0.3s;
     }
-    .btn-primary:hover {
-      background-color: #004aad;
-    }
-    .form-label {
-      font-weight: 500;
-    }
+    .btn-primary:hover { background-color: #004aad; }
+    .form-label { font-weight: 500; }
+    .alert { display: none; margin-bottom: 15px; }
+    .privacy-text { font-size: 14px; color: #6c757d; }
+    .privacy-text a { color: #0d6efd; text-decoration: none; }
+    .privacy-text a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="card">
     <h3 class="text-center mb-4 text-primary">Crear Cuenta</h3>
-    <form method="post">
+    <div id="register-alert" class="alert alert-danger"></div>
+
+    <form id="register-form">
       {% csrf_token %}
-      <div class="mb-3">
-        <label class="form-label">Usuario</label>
-        <input type="text" name="username" class="form-control" placeholder="Ej. Juan23" required>
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label">Contraseña</label>
-        <input type="password" name="password1" class="form-control" placeholder="********" required>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Confirmar Contraseña</label>
-        <input type="password" name="password2" class="form-control" placeholder="********" required>
-      </div>
-      
-      <div class="mb-3">
-        <label class="form-label">Nombre</label>
-        <input type="text" name="nombre" class="form-control" placeholder="Ej. Juan" required>
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label">Apellido</label>
-        <input type="text" name="apellido" class="form-control" placeholder="Ej. Pérez" required>
-      </div>
-      
-      <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input type="email" name="email" class="form-control" placeholder="correo@ejemplo.com" required>
-      </div>
-
-            <div class="mb-3">
-        <label class="form-label">Fecha de nacimiento</label>
-        <input type="date" name="fecha_nacimiento" class="form-control" required>
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label">Teléfono</label>
-        <input type="tel" name="telefono" class="form-control" placeholder="Ej. 3312345678" required>
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label">Institución</label>
-        <input type="text" name="institucion" class="form-control" placeholder="Ej. UDG Virtual">
-      </div>
+      <input type="text" id="username" placeholder="Usuario" class="form-control mb-3" required>
+      <input type="password" id="password1" placeholder="Contraseña" class="form-control mb-3" required>
+      <input type="password" id="password2" placeholder="Confirmar Contraseña" class="form-control mb-3" required>
+      <input type="text" id="nombre" placeholder="Nombre" class="form-control mb-3" required>
+      <input type="text" id="apellido" placeholder="Apellido" class="form-control mb-3" required>
+      <input type="email" id="email" placeholder="Email" class="form-control mb-3" required>
+      <input type="date" id="fecha_nacimiento" class="form-control mb-3" required>
+      <input type="tel" id="telefono" placeholder="Teléfono" class="form-control mb-3" required>
+      <input type="text" id="institucion" placeholder="Institución" class="form-control mb-3">
 
       <div class="mb-3" id="grado-academico-field">
-        <label class="form-label">Grado Académico</label>
-        <select class="form-select" name="grado">
+        <select id="grado" class="form-select">
           <option value="" disabled selected>Selecciona tu semestre</option>
-          <option value="1er semestre">1er semestre</option>
-          <option value="2do semestre">2do semestre</option>
-          <option value="3er semestre">3er semestre</option>
-          <option value="4to semestre">4to semestre</option>
-          <option value="5to semestre">5to semestre</option>
-          <option value="6to semestre">6to semestre</option>
-          <option value="7mo semestre">7mo semestre</option>
-          <option value="8vo semestre">8vo semestre</option>
+          {% for i in "12345678"|make_list %}
+            <option value="{{ i }}º semestre">{{ i }}º semestre</option>
+          {% endfor %}
         </select>
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Rol</label>
-        <select class="form-select" name="rol" id="rol" required>
+        <select id="rol" class="form-select" required>
           <option value="estudiante" selected>Estudiante</option>
           <option value="profesor">Profesor</option>
-          <option value="mentor">Mentor</option>
         </select>
       </div>
 
-    <script>
-  const rolSelect = document.getElementById("rol");
-  const gradoField = document.getElementById("grado-academico-field");
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="accept-privacy" required>
+        <label class="form-check-label privacy-text" for="accept-privacy">
+          He leído y acepto la <a href="{% url 'privacy_policy' %}" target="_blank">Política de Privacidad</a>
+        </label>
+      </div>
 
-  function toggleGradoField() {
-    if (rolSelect.value === "estudiante") {
-      gradoField.style.display = "block";
-    } else {
-      gradoField.style.display = "none";
-    }
-  }
-
-  // Ejecutar al cargar la página
-  toggleGradoField();
-
-  // Escuchar cambios en el select de rol
-  rolSelect.addEventListener("change", toggleGradoField);
-</script>
-  
       <button type="submit" class="btn btn-primary w-100">Registrarse</button>
-      <p class="mt-3 text-center">¿Ya tienes cuenta? 
-        <a href="{% url 'login' %}">Inicia sesión</a>
-      </p>
+      <p class="mt-3 text-center">¿Ya tienes cuenta? <a href="{% url 'login' %}">Inicia sesión</a></p>
     </form>
   </div>
+
+  <script>
+    const rolSelect = document.getElementById("rol");
+    const gradoField = document.getElementById("grado-academico-field");
+
+    function toggleGradoField() {
+      gradoField.style.display = rolSelect.value === "estudiante" ? "block" : "none";
+    }
+    toggleGradoField();
+    rolSelect.addEventListener("change", toggleGradoField);
+
+    async function register() {
+      const alertBox = document.getElementById("register-alert");
+      if (!document.getElementById("accept-privacy").checked) {
+        alertBox.style.display = "block";
+        alertBox.innerText = "Debes aceptar la Política de Privacidad para registrarte.";
+        return;
+      }
+
+      const data = {
+        username: document.getElementById("username").value,
+        password1: document.getElementById("password1").value,
+        password2: document.getElementById("password2").value,
+        nombre: document.getElementById("nombre").value,
+        apellido: document.getElementById("apellido").value,
+        email: document.getElementById("email").value,
+        fecha_nacimiento: document.getElementById("fecha_nacimiento").value,
+        telefono: document.getElementById("telefono").value,
+        institucion: document.getElementById("institucion").value,
+        rol: rolSelect.value,
+        grado: rolSelect.value === "estudiante" ? document.getElementById("grado").value : null
+      };
+
+      const resp = await fetch("{% url 'api_register_session' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify(data)
+      });
+
+      const respData = await resp.json();
+
+      if (!resp.ok) {
+        alertBox.style.display = "block";
+        alertBox.innerText = respData.error || "Error al registrarse";
+      } else {
+        alertBox.style.display = "none";
+        localStorage.setItem("access", respData.access);
+        localStorage.setItem("refresh", respData.refresh);
+
+        // Redirección según rol
+        if (respData.rol === "profesor") window.location.href = "{% url 'dashboard_profesor' %}";
+        else window.location.href = "{% url 'dashboard_user' %}";
+      }
+    }
+
+    document.getElementById("register-form").addEventListener("submit", e => {
+      e.preventDefault();
+      register();
+    });
+  </script>
 </body>
 </html>

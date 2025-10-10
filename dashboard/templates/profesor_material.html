@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Materiales del Profesor</h1>
+
+<ul>
+{% for material in materiales %}
+    <li>
+        <strong>{{ material.titulo }}</strong> - Curso: {{ material.curso }}
+    </li>
+{% empty %}
+    <li>No hay materiales disponibles.</li>
+{% endfor %}
+</ul>
+{% endblock %}
