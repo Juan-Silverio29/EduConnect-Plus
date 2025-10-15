@@ -13,12 +13,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY
 SECRET_KEY = 'django-insecure-sduq&l09yedz8-!m0bu(k3xv7_@3#ltpb%7w8orx$zv$v_f!b@'
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
-
+	
 ALLOWED_HOSTS = [
     '3.146.150.176',
     '127.0.0.1',
     'localhost',
-    'ec2-3-146-150-176.us-east-2.compute.amazonaws.com'
+    'ec2-3-146-150-176.us-east-2.compute.amazonaws.com',
+    'educonnect.duckdns.org'
+	
 ]
 
 # Application definition
@@ -85,14 +87,9 @@ if os.environ.get('DJANGO_PRODUCTION') == 'True':
         }
     }
 else:
-    # Desarrollo local: SQLite
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / "db.sqlite3",
-        }
-    }
+ raise Exception("No database configured! Set DJANGO_PRODUCTION=True for production.")
 
+    # Desarrollo local: SQLite
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
