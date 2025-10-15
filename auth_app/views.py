@@ -151,50 +151,62 @@ def api_register(request):
 @api_view(['POST'])
 def api_register_session(request):
     data = request.data
-    username = data.get("username")
-    email = data.get("email")
-    password1 = data.get("password1")
-    password2 = data.get("password2")
-    rol = data.get("rol")
-    nombre = data.get("nombre")
-    apellido = data.get("apellido")
-    fecha_nacimiento = data.get("fecha_nacimiento")
-    telefono = data.get("telefono")
-    institucion = data.get("institucion")
-    grado = data.get("grado") if rol == "estudiante" else None
+    username = data.get("username", "").strip()
+    email = data.get("email", "").strip()
+    password1 = data.get("password1", "").strip()
+    password2 = data.get("password2", "").strip()
+    rol = data.get("rol", "").strip()
+    nombre_completo = data.get("nombre_completo", "").strip()
+    alias = (data.get("alias") or "").strip() or None
+    institucion = data.get("institucion", "").strip()
+    semestre = data.get("semestre", "").strip() if rol == "estudiante" else None
+
+    #  Validaciones básicas
+    if not username or not email or not password1 or not password2 or not nombre_completo:
+        return Response({'error': 'Por favor completa todos los campos obligatorios.'}, status=400)
 
     if password1 != password2:
-        return Response({'error': 'Las contraseñas no coinciden'}, status=400)
-    if rol not in ["estudiante", "profesor"]:
-        return Response({'error': 'Rol no válido'}, status=400)
-    if User.objects.filter(username=username).exists():
-        return Response({'error': 'El usuario ya existe'}, status=400)
+        return Response({'error': 'Las contraseñas no coinciden.'}, status=400)
 
+    if rol not in ["estudiante", "profesor"]:
+        return Response({'error': 'Rol no válido.'}, status=400)
+
+    if User.objects.filter(username=username).exists():
+        return Response({'error': 'El usuario ya existe.'}, status=400)
+
+    if User.objects.filter(email=email).exists():
+        return Response({'error': 'El correo electrónico ya está registrado.'}, status=400)
+
+    # Dividir nombre completo en nombre y apellido
+    partes = nombre_completo.split(" ", 1)
+    first_name = partes[0] if partes else ""
+    last_name = partes[1] if len(partes) > 1 else ""
+
+    # Crear usuario
     user = User.objects.create_user(
         username=username,
         email=email,
         password=password1,
-        first_name=nombre,
-        last_name=apellido
+        first_name=first_name,
+        last_name=last_name
     )
 
     # Asignar roles
-    if rol == "profesor":
-        user.is_staff = False
-    else:
-        user.is_staff = False
+    user.is_staff = False
     user.is_superuser = False
     user.save()
 
+    # Autenticación y tokens
     login(request, user)
     refresh = RefreshToken.for_user(user)
 
     return Response({
+        'message': 'Usuario registrado exitosamente.',
         'refresh': str(refresh),
         'access': str(refresh.access_token),
-        'rol': rol
+        'rol': rol,
+        'usuario': username
     }, status=201)
-
 
 @api_view(['POST'])
 def api_login_session(request):

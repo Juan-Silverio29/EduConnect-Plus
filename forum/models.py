@@ -6,7 +6,8 @@ class Foro(models.Model):
     descripcion = models.TextField()
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    archivo = models.FileField(upload_to="foros/", blank=True, null=True)  
+    archivo = models.FileField(upload_to="foros/", blank=True, null=True)
+    autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="foros")  
 
     def __str__(self):
         return self.titulo
