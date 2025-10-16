@@ -57,15 +57,20 @@
             <h5><strong>{{ foro.titulo }}</strong></h5>
             <p>{{ foro.descripcion }}</p>
             <p class="text-muted">Publicado por {{ foro.autor.username }}</p>
+
+            <!-- Botones de acción -->
             <a href="{% url 'foro_detalle' foro.id %}" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-eye"></i> Ver
             </a>
-            <a href="{% url 'editar_foro' foro.id %}" class="btn btn-outline-warning btn-sm">
-                <i class="bi bi-pencil"></i> Editar
-            </a>
-            <a href="{% url 'eliminar_foro' foro.id %}" class="btn btn-outline-danger btn-sm">
-                <i class="bi bi-trash"></i> Eliminar
-            </a>
+
+            {% if foro.autor == user %}
+                <a href="{% url 'editar_foro' foro.id %}" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+                <a href="{% url 'eliminar_foro' foro.id %}" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-trash"></i> Eliminar
+                </a>
+            {% endif %}
         </div>
         {% endfor %}
     {% else %}
@@ -76,7 +81,7 @@
         <i class="bi bi-plus-lg"></i> Crear nuevo tema
     </a>
     <div class="text-center mt-3">
-        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+        <a href="{% url 'dashboard_user' %}" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> Regresar
         </a>
     </div>

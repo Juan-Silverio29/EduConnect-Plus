@@ -1,6 +1,7 @@
 # auth_app/urls.py
 from django.urls import path
 from . import views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     # Vistas normales
@@ -8,6 +9,20 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("register/", views.register_view, name="register"),
     path("privacy/", views.privacy_policy_view, name="privacy_policy"),
+    path('configuracion/', views.configuracion_view, name='configuracion'),
+    path('editar_perfil/', views.editar_perfil_view, name='editar_perfil'),
+    
+
+
+    path('password_change/', auth_views.PasswordChangeView.as_view(
+        template_name='password_change.html',
+        success_url='/auth/password_change/done/'
+    ), name='password_change'),
+
+    path('password_change/done/', auth_views.PasswordChangeDoneView.as_view(
+        template_name='password_change_done.html'
+    ), name='password_change_done'),
+    
 
     # Dashboards por rol
     path("dashboard/", views.dashboard, name="dashboard"),  # redirige según rol

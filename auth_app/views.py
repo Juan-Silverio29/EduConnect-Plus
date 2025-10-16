@@ -3,6 +3,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django import forms
+from .models import PerfilUsuario
+from django.contrib.auth.decorators import login_required
+
 
 # DRF y JWT
 from rest_framework.decorators import api_view
@@ -41,6 +45,7 @@ def register_view(request):
         rol = request.POST.get("rol")
         nombre = request.POST.get("nombre")
         apellido = request.POST.get("apellido")
+        institucion = request.POST.get("institucion")
 
         if password1 != password2:
             messages.error(request, "Las contraseñas no coinciden")
@@ -61,6 +66,11 @@ def register_view(request):
             first_name=nombre,
             last_name=apellido
         )
+        
+        PerfilUsuario.objects.create(
+            user=user,
+            institucion=institucion
+        )
 
         # Asignar roles correctamente
         if rol == "profesor":
@@ -76,6 +86,8 @@ def register_view(request):
             return redirect("dashboard_profesor")
         else:
             return redirect("dashboard_user")
+        
+        
 
     return render(request, "register.html")
 
@@ -191,6 +203,13 @@ def api_register_session(request):
         last_name=last_name
     )
 
+        # ✅ Crear el perfil automáticamente
+    PerfilUsuario.objects.create(
+        user=user,
+        institucion=institucion,
+        foto_perfil="img/default_user.png"  # si no sube una
+    )
+
     # Asignar roles
     user.is_staff = False
     user.is_superuser = False
@@ -282,3 +301,52 @@ def profesor_dashboard(request):
 @login_required
 def admin_dashboard(request):
     return render(request, "admin_dashboard.html")
+
+@login_required
+def configuracion_view(request):
+    perfil, _ = PerfilUsuario.objects.get_or_create(user=request.user)
+    return render(request, "configuracion.html", {"perfil": perfil})
+
+class EditarPerfilForm(forms.ModelForm):
+    username = forms.CharField(label="Usuario", max_length=150, required=False, disabled=True)
+    first_name = forms.CharField(label="Nombre", max_length=150, required=False)
+    last_name = forms.CharField(label="Apellido", max_length=150, required=False)
+
+    class Meta:
+        model = PerfilUsuario
+        fields = ['foto_perfil']  # 👈 Solo este campo viene del modelo PerfilUsuario
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user')
+        super().__init__(*args, **kwargs)
+        # Inicializa con los datos del usuario
+        self.fields['username'].initial = user.username
+        self.fields['first_name'].initial = user.first_name
+        self.fields['last_name'].initial = user.last_name
+
+    def save(self, commit=True):
+        perfil = super().save(commit=False)
+        user = perfil.user
+        # Actualiza los datos del modelo User
+        user.first_name = self.cleaned_data.get('first_name')
+        user.last_name = self.cleaned_data.get('last_name')
+        if commit:
+            user.save()
+            perfil.save()
+        return perfil
+
+
+@login_required
+def editar_perfil_view(request):
+    perfil, _ = PerfilUsuario.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        form = EditarPerfilForm(request.POST, request.FILES, instance=perfil, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "✅ Perfil actualizado correctamente.")
+            return redirect('configuracion')
+    else:
+        form = EditarPerfilForm(instance=perfil, user=request.user)
+
+    return render(request, "editar_perfil.html", {"form": form})
+
