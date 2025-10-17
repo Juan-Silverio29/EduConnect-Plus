@@ -6,6 +6,8 @@ from django.contrib import messages
 from django import forms
 from .models import PerfilUsuario
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
+from django.shortcuts import redirect
 
 
 # DRF y JWT
@@ -350,3 +352,12 @@ def editar_perfil_view(request):
 
     return render(request, "editar_perfil.html", {"form": form})
 
+
+
+@login_required
+def eliminar_cuenta(request):
+    """Elimina la cuenta del usuario logueado y muestra pantalla de confirmación"""
+    user = request.user
+    logout(request)
+    user.delete()
+    return render(request, 'eliminacion_exitosa.html')

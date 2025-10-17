@@ -11,6 +11,8 @@ urlpatterns = [
     path("privacy/", views.privacy_policy_view, name="privacy_policy"),
     path('configuracion/', views.configuracion_view, name='configuracion'),
     path('editar_perfil/', views.editar_perfil_view, name='editar_perfil'),
+    path("eliminar_cuenta/", views.eliminar_cuenta, name="eliminar_cuenta"),
+
     
 
 
