@@ -76,7 +76,13 @@
         </form>
 
         <div class="text-center mt-3">
-            <a href="{% url 'configuracion' %}" class="text-secondary">⬅ Volver a Configuración</a>
+            {% if user.is_staff %}
+                <a href="{% url 'configuracion_profesor' %}" class="btn btn-secondary">← Volver</a>
+            {% elif user.is_superuser %}
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">← Volver</a>
+            {% else %}
+        <a href="{% url 'configuracion' %}" class="btn btn-secondary">← Volver</a>
+            {% endif %}
         </div>
     </div>
 </div>

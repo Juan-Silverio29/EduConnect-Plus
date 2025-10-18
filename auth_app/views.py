@@ -8,6 +8,8 @@ from .models import PerfilUsuario
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.shortcuts import redirect
+from django.contrib.auth.views import PasswordChangeView
+from django.urls import reverse_lazy
 
 
 # DRF y JWT
@@ -25,6 +27,7 @@ def login_view(request):
         password = request.POST.get("password")
         user = authenticate(request, username=username, password=password)
         if user:
+            user = User.objects.get(pk=user.pk)
             login(request, user)
             print(f"[DEBUG] Usuario: {user.username} | is_superuser: {user.is_superuser} | is_staff: {user.is_staff}")
             if user.is_superuser:
@@ -61,26 +64,22 @@ def register_view(request):
             messages.error(request, "El usuario ya existe")
             return redirect("register")
 
+        # 🔹 Crear usuario con flags correctos desde el inicio
         user = User.objects.create_user(
             username=username,
             email=email,
             password=password1,
             first_name=nombre,
-            last_name=apellido
+            last_name=apellido,
+            is_superuser=False,
+            is_staff=True if rol == "profesor" else False
         )
-        
+
+        # 🔹 Crear el perfil asociado
         PerfilUsuario.objects.create(
             user=user,
             institucion=institucion
         )
-
-        # Asignar roles correctamente
-        if rol == "profesor":
-            user.is_staff = True
-        else:
-            user.is_staff = False
-        user.is_superuser = False  # nunca un profesor es superuser
-        user.save()
 
         login(request, user)
 
@@ -88,8 +87,6 @@ def register_view(request):
             return redirect("dashboard_profesor")
         else:
             return redirect("dashboard_user")
-        
-        
 
     return render(request, "register.html")
 
@@ -212,8 +209,11 @@ def api_register_session(request):
         foto_perfil="img/default_user.png"  # si no sube una
     )
 
-    # Asignar roles
-    user.is_staff = False
+    # Asignar roles según tipo
+    if rol == "profesor":
+        user.is_staff = True
+    else:
+        user.is_staff = False
     user.is_superuser = False
     user.save()
 
@@ -346,11 +346,19 @@ def editar_perfil_view(request):
         if form.is_valid():
             form.save()
             messages.success(request, "✅ Perfil actualizado correctamente.")
-            return redirect('configuracion')
+
+            # 🔹 Redirección según el tipo de usuario
+            if request.user.is_superuser:
+                return redirect('admin_dashboard')
+            elif request.user.is_staff:
+                return redirect('configuracion_profesor')  # 🔹 profesor
+            else:
+                return redirect('configuracion')  # 🔹 estudiante
     else:
         form = EditarPerfilForm(instance=perfil, user=request.user)
 
     return render(request, "editar_perfil.html", {"form": form})
+
 
 
 
@@ -361,3 +369,27 @@ def eliminar_cuenta(request):
     logout(request)
     user.delete()
     return render(request, 'eliminacion_exitosa.html')
+
+@login_required
+def configuracion_profesor_view(request):
+    perfil, _ = PerfilUsuario.objects.get_or_create(user=request.user)
+
+    if not request.user.is_staff:
+        messages.warning(request, "Acceso restringido a profesores.")
+        return redirect("dashboard_user")
+
+    context = {"perfil": perfil}
+    return render(request, "configuracion_profesor.html", context)
+
+class CustomPasswordChangeView(PasswordChangeView):
+    template_name = 'password_change.html'
+
+    def get_success_url(self):
+        user = self.request.user
+        # 🔹 Redirección según el tipo de usuario
+        if user.is_superuser:
+            return reverse_lazy('admin_dashboard')
+        elif user.is_staff:
+            return reverse_lazy('configuracion_profesor')
+        else:
+            return reverse_lazy('configuracion')

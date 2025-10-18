@@ -5,6 +5,11 @@ from resources.models import Recursos
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from .models import MaterialDidactico
+from .forms import MaterialForm
+from django.shortcuts import render, redirect
+from auth_app.models import PerfilUsuario 
+from django.contrib import messages
 
 # ---------------------------
 # Prueba JWT
@@ -93,3 +98,25 @@ def profesor_material(request):
         {"titulo": "Libro Historia", "curso": "Historia"},
     ]
     return render(request, "profesor_material.html", {"materiales": materiales})
+
+@login_required
+def profesor_material(request):
+    materiales = MaterialDidactico.objects.filter(profesor=request.user).order_by('-fecha')
+
+    if request.method == 'POST':
+        form = MaterialForm(request.POST, request.FILES)
+        if form.is_valid():
+            material = form.save(commit=False)
+            material.profesor = request.user
+            material.save()
+            messages.success(request, "✅ Material subido correctamente.")
+            return redirect('profesor_material')
+    else:
+        form = MaterialForm()
+
+    context = {
+        'materiales': materiales,
+        'form': form,
+    }
+    return render(request, 'profesor_material.html', context)
+
