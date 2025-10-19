@@ -10,6 +10,8 @@ from .forms import MaterialForm
 from django.shortcuts import render, redirect
 from auth_app.models import PerfilUsuario 
 from django.contrib import messages
+from django.shortcuts import get_object_or_404
+from forum.models import Foro
 
 # ---------------------------
 # Prueba JWT
@@ -119,4 +121,32 @@ def profesor_material(request):
         'form': form,
     }
     return render(request, 'profesor_material.html', context)
+
+@login_required
+def editar_material_view(request, id):
+    material = get_object_or_404(MaterialDidactico, id=id, profesor=request.user)
+    if request.method == 'POST':
+        material.titulo = request.POST.get('titulo')
+        material.tipo = request.POST.get('tipo')
+        if request.FILES.get('archivo'):
+            material.archivo = request.FILES['archivo']
+        material.enlace = request.POST.get('enlace')
+        material.save()
+        messages.success(request, "✅ Material actualizado correctamente.")
+        return redirect('profesor_material')
+    return render(request, 'editar_material.html', {'material': material})
+
+@login_required
+def eliminar_material_view(request, id):
+    material = get_object_or_404(MaterialDidactico, id=id, profesor=request.user)
+    material.delete()
+    messages.success(request, "🗑️ Material eliminado correctamente.")
+    return redirect('profesor_material')
+
+@login_required
+def foros_profesor(request):
+    storage = messages.get_messages(request)
+    storage.used = True
+    foros = Foro.objects.all().order_by('-fecha_creacion')
+    return render(request, 'foros_profesor.html', {'foros': foros})
 

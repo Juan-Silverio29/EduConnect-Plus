@@ -4,10 +4,10 @@ from django.contrib.auth.models import User
 class Foro(models.Model):
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField()
-    autor = models.ForeignKey(User, on_delete=models.CASCADE)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     archivo = models.FileField(upload_to="foros/", blank=True, null=True)
-    autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="foros")  
+    autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="foros")
+    fijado = models.BooleanField(default=False)
 
     def __str__(self):
         return self.titulo

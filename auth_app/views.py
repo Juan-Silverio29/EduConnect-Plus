@@ -50,8 +50,9 @@ def register_view(request):
         rol = request.POST.get("rol")
         nombre = request.POST.get("nombre")
         apellido = request.POST.get("apellido")
-        institucion = request.POST.get("institucion")
+        institucion = request.POST.get("institucion", "").strip()  # ← aseguramos valor
 
+        # 🔹 Validaciones básicas
         if password1 != password2:
             messages.error(request, "Las contraseñas no coinciden")
             return redirect("register")
@@ -64,7 +65,7 @@ def register_view(request):
             messages.error(request, "El usuario ya existe")
             return redirect("register")
 
-        # 🔹 Crear usuario con flags correctos desde el inicio
+        # 🔹 Crear usuario
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -72,20 +73,24 @@ def register_view(request):
             first_name=nombre,
             last_name=apellido,
             is_superuser=False,
-            is_staff=True if rol == "profesor" else False
+            is_staff=(rol == "profesor")
         )
 
-        # 🔹 Crear el perfil asociado
-        PerfilUsuario.objects.create(
+        # 🔹 Crear perfil asociado con institución
+        perfil = PerfilUsuario.objects.create(
             user=user,
-            institucion=institucion
+            institucion=institucion if institucion else None
         )
 
+        # 🔹 Iniciar sesión automáticamente
         login(request, user)
 
+        # 🔹 Redirección según rol
         if rol == "profesor":
+            messages.success(request, f"✅ Bienvenido profesor {nombre} {apellido}")
             return redirect("dashboard_profesor")
         else:
+            messages.success(request, f"✅ Bienvenido {nombre} {apellido}")
             return redirect("dashboard_user")
 
     return render(request, "register.html")
@@ -360,18 +365,17 @@ def editar_perfil_view(request):
     return render(request, "editar_perfil.html", {"form": form})
 
 
-
-
 @login_required
 def eliminar_cuenta(request):
-    """Elimina la cuenta del usuario logueado y muestra pantalla de confirmación"""
+    """Elimina la cuenta del usuario logueado y muestra la pantalla de confirmación."""
     user = request.user
     logout(request)
     user.delete()
-    return render(request, 'eliminacion_exitosa.html')
+    return render(request, "eliminacion_exitosa.html", {"username": user.username})
 
 @login_required
 def configuracion_profesor_view(request):
+    messages.get_messages(request).used = True  # limpia mensajes previos
     perfil, _ = PerfilUsuario.objects.get_or_create(user=request.user)
 
     if not request.user.is_staff:

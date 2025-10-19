@@ -124,8 +124,6 @@
                         <div class="material-card">
                             <p class="material-title">{{ material.titulo }}</p>
                             <p><span class="material-icon">📁</span> <strong>Tipo:</strong> {{ material.tipo }}</p>
-                            <p><span class="material-icon">📅</span> <strong>Fecha de subida:</strong> {{ material.fecha_subida|date:"d/m/Y" }}</p>
-
                             {% if material.enlace %}
                                 <p><span class="material-icon">🔗</span>
                                     <a href="{{ material.enlace }}" target="_blank">Abrir enlace</a>
@@ -135,6 +133,12 @@
                             {% if material.archivo %}
                                 <p><span class="material-icon">📅</span> <strong>Fecha de subida:</strong> {{ material.fecha|date:"d/m/Y" }}</p>
                                     <a href="{{ material.archivo.url }}" target="_blank" download>Descargar archivo</a>
+                                    <div class="mt-2">
+                                        <a href="{% url 'editar_material' material.id %}" class="btn btn-sm btn-warning me-2">✏️ Editar</a>
+                                        <a href="{% url 'eliminar_material' material.id %}" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('¿Seguro que deseas eliminar este material?');">🗑️ Eliminar</a>
+                                    </div>
+
                                 </p>
                             {% endif %}
                         </div>
