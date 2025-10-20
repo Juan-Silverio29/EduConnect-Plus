@@ -3,6 +3,14 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django import forms
+from .models import PerfilUsuario
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+from django.contrib.auth.views import PasswordChangeView
+from django.urls import reverse_lazy
+
 
 # DRF y JWT
 from rest_framework.decorators import api_view
@@ -19,6 +27,7 @@ def login_view(request):
         password = request.POST.get("password")
         user = authenticate(request, username=username, password=password)
         if user:
+            user = User.objects.get(pk=user.pk)
             login(request, user)
             print(f"[DEBUG] Usuario: {user.username} | is_superuser: {user.is_superuser} | is_staff: {user.is_staff}")
             if user.is_superuser:
@@ -41,7 +50,9 @@ def register_view(request):
         rol = request.POST.get("rol")
         nombre = request.POST.get("nombre")
         apellido = request.POST.get("apellido")
+        institucion = request.POST.get("institucion", "").strip()  # ← aseguramos valor
 
+        # 🔹 Validaciones básicas
         if password1 != password2:
             messages.error(request, "Las contraseñas no coinciden")
             return redirect("register")
@@ -54,27 +65,32 @@ def register_view(request):
             messages.error(request, "El usuario ya existe")
             return redirect("register")
 
+        # 🔹 Crear usuario
         user = User.objects.create_user(
             username=username,
             email=email,
             password=password1,
             first_name=nombre,
-            last_name=apellido
+            last_name=apellido,
+            is_superuser=False,
+            is_staff=(rol == "profesor")
         )
 
-        # Asignar roles correctamente
-        if rol == "profesor":
-            user.is_staff = True
-        else:
-            user.is_staff = False
-        user.is_superuser = False  # nunca un profesor es superuser
-        user.save()
+        # 🔹 Crear perfil asociado con institución
+        perfil = PerfilUsuario.objects.create(
+            user=user,
+            institucion=institucion if institucion else None
+        )
 
+        # 🔹 Iniciar sesión automáticamente
         login(request, user)
 
+        # 🔹 Redirección según rol
         if rol == "profesor":
+            messages.success(request, f"✅ Bienvenido profesor {nombre} {apellido}")
             return redirect("dashboard_profesor")
         else:
+            messages.success(request, f"✅ Bienvenido {nombre} {apellido}")
             return redirect("dashboard_user")
 
     return render(request, "register.html")
@@ -191,8 +207,18 @@ def api_register_session(request):
         last_name=last_name
     )
 
-    # Asignar roles
-    user.is_staff = False
+        # ✅ Crear el perfil automáticamente
+    PerfilUsuario.objects.create(
+        user=user,
+        institucion=institucion,
+        foto_perfil="img/default_user.png"  # si no sube una
+    )
+
+    # Asignar roles según tipo
+    if rol == "profesor":
+        user.is_staff = True
+    else:
+        user.is_staff = False
     user.is_superuser = False
     user.save()
 
@@ -282,3 +308,92 @@ def profesor_dashboard(request):
 @login_required
 def admin_dashboard(request):
     return render(request, "admin_dashboard.html")
+
+@login_required
+def configuracion_view(request):
+    perfil, _ = PerfilUsuario.objects.get_or_create(user=request.user)
+    return render(request, "configuracion.html", {"perfil": perfil})
+
+class EditarPerfilForm(forms.ModelForm):
+    username = forms.CharField(label="Usuario", max_length=150, required=False, disabled=True)
+    first_name = forms.CharField(label="Nombre", max_length=150, required=False)
+    last_name = forms.CharField(label="Apellido", max_length=150, required=False)
+
+    class Meta:
+        model = PerfilUsuario
+        fields = ['foto_perfil']  # 👈 Solo este campo viene del modelo PerfilUsuario
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user')
+        super().__init__(*args, **kwargs)
+        # Inicializa con los datos del usuario
+        self.fields['username'].initial = user.username
+        self.fields['first_name'].initial = user.first_name
+        self.fields['last_name'].initial = user.last_name
+
+    def save(self, commit=True):
+        perfil = super().save(commit=False)
+        user = perfil.user
+        # Actualiza los datos del modelo User
+        user.first_name = self.cleaned_data.get('first_name')
+        user.last_name = self.cleaned_data.get('last_name')
+        if commit:
+            user.save()
+            perfil.save()
+        return perfil
+
+
+@login_required
+def editar_perfil_view(request):
+    perfil, _ = PerfilUsuario.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        form = EditarPerfilForm(request.POST, request.FILES, instance=perfil, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "✅ Perfil actualizado correctamente.")
+
+            # 🔹 Redirección según el tipo de usuario
+            if request.user.is_superuser:
+                return redirect('admin_dashboard')
+            elif request.user.is_staff:
+                return redirect('configuracion_profesor')  # 🔹 profesor
+            else:
+                return redirect('configuracion')  # 🔹 estudiante
+    else:
+        form = EditarPerfilForm(instance=perfil, user=request.user)
+
+    return render(request, "editar_perfil.html", {"form": form})
+
+
+@login_required
+def eliminar_cuenta(request):
+    """Elimina la cuenta del usuario logueado y muestra la pantalla de confirmación."""
+    user = request.user
+    logout(request)
+    user.delete()
+    return render(request, "eliminacion_exitosa.html", {"username": user.username})
+
+@login_required
+def configuracion_profesor_view(request):
+    messages.get_messages(request).used = True  # limpia mensajes previos
+    perfil, _ = PerfilUsuario.objects.get_or_create(user=request.user)
+
+    if not request.user.is_staff:
+        messages.warning(request, "Acceso restringido a profesores.")
+        return redirect("dashboard_user")
+
+    context = {"perfil": perfil}
+    return render(request, "configuracion_profesor.html", context)
+
+class CustomPasswordChangeView(PasswordChangeView):
+    template_name = 'password_change.html'
+
+    def get_success_url(self):
+        user = self.request.user
+        # 🔹 Redirección según el tipo de usuario
+        if user.is_superuser:
+            return reverse_lazy('admin_dashboard')
+        elif user.is_staff:
+            return reverse_lazy('configuracion_profesor')
+        else:
+            return reverse_lazy('configuracion')

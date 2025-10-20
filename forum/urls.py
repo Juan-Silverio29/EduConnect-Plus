@@ -10,4 +10,5 @@ urlpatterns = [
 
     path("comentario/<int:comentario_id>/editar/", views.editar_comentario, name="editar_comentario"),
     path("comentario/<int:comentario_id>/eliminar/", views.eliminar_comentario, name="eliminar_comentario"),
+    path('<int:foro_id>/fijar/', views.fijar_foro, name='fijar_foro'),
 ]

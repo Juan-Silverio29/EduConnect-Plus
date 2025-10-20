@@ -70,7 +70,11 @@
       <a href="{% url 'profesor_cursos' %}">📚 Mis Cursos</a>
       <a href="{% url 'profesor_evaluaciones' %}">📝 Evaluaciones</a>
       <a href="{% url 'profesor_material' %}">📤 Material Didáctico</a>
-      <a href="#">⚙️ Configuración</a>
+
+      <!-- ✅ Nuevo botón de Foro Académico -->
+      <a href="{% url 'foros_profesor' %}">💬 Foro Académico</a>
+
+      <a href="{% url 'configuracion_profesor' %}">⚙️ Configuración</a>
       <a href="{% url 'logout' %}" class="logout">🚪 Cerrar Sesión</a>
     </div>
 
