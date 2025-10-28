@@ -316,6 +316,12 @@ def api_register_session(request):
         foto_perfil="img/default_user.png"  # si no sube una
     )
 
+    except Exception as e:
+    # Manejar cualquier error
+    return render(request, 'register.html', {
+        'error': f'Error al crear el usuario: {str(e)}'
+    })
+
 
         # ✅ SOLUCIÓN: Especificar el backend manualmente antes del login
         user.backend = 'django.contrib.auth.backends.ModelBackend'
