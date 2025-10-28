@@ -9,11 +9,8 @@ urlpatterns = [
     path('profesor/', views.dashboard_profesor, name='dashboard_profesor'),
     path('admin-panel/', views.dashboard_admin, name='dashboard_admin'),
 
-<<<<<<< HEAD
     # Profesor
-=======
     path('prueba/', views.prueba_jwt, name='prueba-jwt'),
->>>>>>> origin/paul-dev
     path('profesor/cursos/', views.profesor_cursos, name='profesor_cursos'),
     path('profesor/evaluaciones/', views.profesor_evaluaciones, name='profesor_evaluaciones'),
     path('profesor/material/', views.profesor_material, name='profesor_material'),

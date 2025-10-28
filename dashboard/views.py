@@ -9,8 +9,6 @@ from forum.models import Foro
 from .models import MaterialDidactico
 from .models import Curso, Inscripcion, MaterialDidactico
 from .forms import MaterialForm
-<<<<<<< HEAD
-=======
 from django.shortcuts import render, redirect
 from auth_app.models import PerfilUsuario 
 from django.contrib import messages
@@ -21,7 +19,6 @@ from .models import Evaluacion
 from django.db import models
 from .forms import CursoForm
 import os
->>>>>>> origin/paul-dev
 
 # ---------------------------
 # Redirección según el rol
@@ -142,8 +139,6 @@ def profesor_evaluaciones(request):
 
 @login_required
 def profesor_material(request):
-<<<<<<< HEAD
-=======
     materiales = [
         {"titulo": "Apuntes Matemáticas", "curso": "Matemáticas I"},
         {"titulo": "Libro Historia", "curso": "Historia"},
@@ -153,7 +148,6 @@ def profesor_material(request):
 @login_required
 def profesor_material(request):
     # 🔹 Mostrar materiales del profesor
->>>>>>> origin/paul-dev
     materiales = MaterialDidactico.objects.filter(profesor=request.user).order_by('-fecha')
 
     # 🔹 Traer cursos del profesor para el selector
@@ -198,17 +192,15 @@ def profesor_material(request):
     else:
         form = MaterialForm()
 
-<<<<<<< HEAD
     return render(request, 'profesor_material.html', {'materiales': materiales, 'form': form})
 
-=======
+
     # 🔹 Enviar cursos al template
     return render(request, 'profesor_material.html', {
         'form': form,
         'materiales': materiales,
         'cursos': cursos
     })
->>>>>>> origin/paul-dev
 
 @login_required
 def editar_material_view(request, id):
@@ -238,7 +230,6 @@ def foros_profesor(request):
     foros = Foro.objects.all().order_by('-fecha_creacion')
     return render(request, 'foros_profesor.html', {'foros': foros})
 
-<<<<<<< HEAD
 
 # ---------------------------
 # DASHBOARD: USUARIO
@@ -246,7 +237,7 @@ def foros_profesor(request):
 @login_required
 def dashboard_user(request):
     return render(request, "dashboard_user.html")
-=======
+
 @login_required
 def crear_curso(request):
     """
@@ -508,4 +499,3 @@ def quitar_material_evaluacion(request, evaluacion_id, material_id):
         messages.error(request, "❌ El material no pertenece a esta evaluación.")
 
     return redirect("detalle_evaluacion", evaluacion_id=evaluacion.id)
->>>>>>> origin/paul-dev

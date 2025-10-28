@@ -1,13 +1,10 @@
 # dashboard/forms.py
 from django import forms
 from .models import MaterialDidactico
-<<<<<<< HEAD
 from auth_app.models import PerfilUsuario
-=======
 from .models import Evaluacion
 from django import forms
 from .models import Curso
->>>>>>> origin/paul-dev
 
 class MaterialForm(forms.ModelForm):
     class Meta:
@@ -24,11 +21,8 @@ class MaterialForm(forms.ModelForm):
                 'placeholder': 'https://...'
             }),
         }
-<<<<<<< HEAD
-=======
 from django import forms
 from auth_app.models import PerfilUsuario
->>>>>>> origin/paul-dev
 
 class EditarPerfilForm(forms.ModelForm):
     username = forms.CharField(label="Usuario", max_length=150, required=False, disabled=True)
@@ -57,8 +51,6 @@ class EditarPerfilForm(forms.ModelForm):
             self.user.save()
             perfil.save()
         return perfil
-<<<<<<< HEAD
-=======
     
 
 
@@ -83,4 +75,3 @@ class CursoForm(forms.ModelForm):
             'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Descripción breve'}),
             'categoria': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Categoría'}),
         }
->>>>>>> origin/paul-dev
