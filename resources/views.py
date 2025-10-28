@@ -3,15 +3,59 @@ from .models import Recursos
 from .forms import RecursoForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from dashboard.models import Curso, MaterialDidactico, Inscripcion
 
 # 📌 Lista de recursos (solo los del usuario, admin ve todos)
 @login_required
 def lista_recursos(request):
-    if request.user.is_superuser:
-        recursos = Recursos.objects.all().order_by("-id")
+    """
+    Muestra los materiales de los cursos donde el alumno está inscrito.
+    """
+    # Obtener los cursos donde el usuario (alumno) está inscrito
+    cursos_inscritos = Curso.objects.filter(inscritos__alumno=request.user)
+
+    # Filtrar materiales solo de esos cursos
+    materiales = MaterialDidactico.objects.filter(curso__in=cursos_inscritos).order_by('-fecha')
+
+    # Filtro opcional por curso desde el formulario select
+    curso_id = request.GET.get("curso")
+    if curso_id:
+        materiales = materiales.filter(curso_id=curso_id)
+
+    context = {
+        "materiales": materiales,
+        "cursos_inscritos": cursos_inscritos
+    }
+    return render(request, "lista_recursos.html", context)
+
+@login_required
+def lista_cursos(request):
+    """
+    Muestra todos los cursos disponibles y permite al alumno inscribirse.
+    """
+    cursos = Curso.objects.all().select_related("profesor")
+    inscritos_ids = Inscripcion.objects.filter(alumno=request.user).values_list("curso_id", flat=True)
+
+    context = {
+        "cursos": cursos,
+        "inscritos_ids": inscritos_ids,
+    }
+    return render(request, "lista_cursos.html", context)
+
+@login_required
+def inscribirse_curso(request, curso_id):
+    """
+    Inscribe al alumno en un curso (si no lo estaba ya).
+    """
+    curso = get_object_or_404(Curso, id=curso_id)
+
+    inscripcion, creada = Inscripcion.objects.get_or_create(alumno=request.user, curso=curso)
+    if creada:
+        messages.success(request, f"✅ Te has inscrito al curso: {curso.nombre}")
     else:
-        recursos = Recursos.objects.filter(autor=request.user).order_by("-id")
-    return render(request, "lista_recursos.html", {"recursos": recursos})
+        messages.info(request, f"Ya estás inscrito en el curso: {curso.nombre}")
+
+    return redirect("lista_cursos")
 
 
 # 📍 Subir recurso nuevo

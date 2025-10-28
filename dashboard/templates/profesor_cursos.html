@@ -3,160 +3,122 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Mis Cursos - EduConnect+</title>
+  <title>📚 Mis Cursos - Profesor</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
-    /* ======== ESTILO PROFESOR CURSOS ======== */
     body {
-      background-color: #f5f7fa;
-      font-family: 'Segoe UI', sans-serif;
-      color: #333;
-      margin: 0;
-      padding: 0;
+      background-color: #f5f8ff;
+      font-family: 'Poppins', sans-serif;
     }
 
-    /* Encabezado oscuro */
-    header {
-      background-color: #111;
+    .header {
+      background: linear-gradient(90deg, #007bff, #4b00ff);
       color: white;
-      padding: 25px;
       text-align: center;
-      border-bottom: 4px solid #0d6efd;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-    }
-    header h1 {
-      font-size: 1.8rem;
-      margin: 0;
-      font-weight: 700;
+      padding: 30px 0;
+      border-radius: 0 0 25px 25px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
-    /* Contenedor principal */
-    .container {
-      max-width: 900px;
-      margin: 40px auto;
+    .header h2 { font-weight: 700; }
+
+    .curso-card {
       background: white;
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
     }
 
-    .titulo {
-      background-color: #0d6efd;
+    .curso-card:hover { transform: translateY(-5px); }
+
+    .btn-primary {
+      background-color: #007bff;
+      border: none;
+      border-radius: 8px;
+    }
+
+    .btn-warning { border-radius: 8px; color: white; }
+    .btn-danger { border-radius: 8px; }
+    .btn-crear {
+      background-color: #007bff;
       color: white;
-      padding: 18px;
-      text-align: center;
       border-radius: 10px;
-      font-size: 1.3rem;
       font-weight: 600;
+      padding: 10px 25px;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+
+    .btn-crear:hover { background-color: #0047b3; }
+
+    .empty-state { text-align: center; color: #666; margin-top: 50px; }
+
+    .top-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 30px;
       margin-bottom: 25px;
     }
 
-    /* Tarjetas de cursos */
-    .curso {
-      background: #f9fafc;
-      border: 1px solid #e0e0e0;
-      border-left: 6px solid #0d6efd;
-      padding: 20px;
-      margin-bottom: 15px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      transition: 0.25s;
-    }
-
-    .curso:hover {
-      transform: translateY(-3px);
-      background: #eef4ff;
-    }
-
-    .curso h5 {
-      font-weight: 700;
-      color: #111;
-    }
-
-    .curso p {
-      margin: 4px 0;
-    }
-
-    /* Botones */
-    .btn-ver {
-      background-color: #0d6efd;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      transition: 0.2s;
-    }
-
-    .btn-ver:hover {
-      background-color: #084298;
-    }
-
-    .btn-regresar {
-      display: inline-block;
+    .btn-volver {
       background-color: #555;
       color: white;
-      text-decoration: none;
-      padding: 10px 18px;
       border-radius: 8px;
-      margin-top: 15px;
-      font-size: 0.95rem;
-      transition: 0.2s;
+      padding: 10px 18px;
+      text-decoration: none;
+      transition: 0.3s;
     }
 
-    .btn-regresar:hover {
-      background-color: #333;
-    }
+    .btn-volver:hover { background-color: #2d2d2d; }
 
-    /* Footer */
-    footer {
-      background-color: #111;
-      color: #fff;
-      text-align: center;
-      padding: 12px;
-      margin-top: 40px;
-      border-top: 3px solid #0d6efd;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      header h1 {
-        font-size: 1.4rem;
-      }
-      .container {
-        padding: 20px;
-        margin: 20px;
-      }
-    }
   </style>
 </head>
-
 <body>
-  <!-- Encabezado -->
-  <header>
-    <h1>📚 Mis Cursos</h1>
-  </header>
 
-  <!-- Contenido principal -->
-  <div class="container">
-    <div class="titulo">Listado de cursos asignados</div>
-
-    {% for curso in cursos %}
-      <div class="curso">
-        <h5>{{ curso.nombre }}</h5>
-        <p>👩‍🏫 Grupo: <strong>{{ curso.grupo }}</strong></p>
-        <p>👨‍🎓 Alumnos inscritos: <strong>{{ curso.alumnos }}</strong></p>
-        <button class="btn-ver mt-2">Ver detalles</button>
-      </div>
-    {% empty %}
-      <p>No tienes cursos asignados actualmente.</p>
-    {% endfor %}
-
-    <a href="{% url 'dashboard_profesor' %}" class="btn-regresar">← Regresar</a>
+  <div class="header">
+    <h2>📚 Mis Cursos</h2>
+    <p>Administra los cursos que impartes en EduConnect+</p>
   </div>
 
-  <footer>
-    © 2025 EduConnect Plus - Todos los derechos reservados
-  </footer>
+  <div class="container mt-4">
+
+    <!-- Botones superiores -->
+    <div class="top-actions">
+      <a href="{% url 'dashboard_profesor' %}" class="btn-volver">← Volver al Dashboard</a>
+      <a href="{% url 'crear_curso' %}" class="btn-crear">➕ Crear nuevo curso</a>
+    </div>
+
+    {% if cursos %}
+      <div class="row g-4">
+        {% for curso in cursos %}
+          <div class="col-md-4">
+            <div class="curso-card">
+              <h5><strong>{{ curso.nombre }}</strong></h5>
+              <p class="text-muted">{{ curso.descripcion|truncatechars:100 }}</p>
+              <p><strong>Categoría:</strong> {{ curso.categoria }}</p>
+              {% if curso.grupo %}
+                <p><strong>Grupo:</strong> {{ curso.grupo }}</p>
+              {% endif %}
+              <div class="d-flex justify-content-between mt-3">
+                <a href="{% url 'detalle_curso' curso.id %}" class="btn btn-primary btn-sm">👁 Ver</a>
+                <a href="{% url 'editar_curso' curso.id %}" class="btn btn-warning">✏️ Editar</a>
+                <a href="#" class="btn btn-danger btn-sm">🗑 Eliminar</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+      <div class="empty-state">
+        <h5>No has creado cursos aún.</h5>
+        <a href="{% url 'crear_curso' %}" class="btn-crear">➕ Crear tu primer curso</a>
+      </div>
+    {% endif %}
+  </div>
+
 </body>
 </html>

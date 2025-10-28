@@ -52,7 +52,7 @@ def register_view(request):
         apellido = request.POST.get("apellido")
         institucion = request.POST.get("institucion", "").strip()  # ← aseguramos valor
 
-        # 🔹 Validaciones básicas
+        #  Validaciones básicas
         if password1 != password2:
             messages.error(request, "Las contraseñas no coinciden")
             return redirect("register")
@@ -76,16 +76,16 @@ def register_view(request):
             is_staff=(rol == "profesor")
         )
 
-        # 🔹 Crear perfil asociado con institución
+        #  Crear perfil asociado con institución
         perfil = PerfilUsuario.objects.create(
             user=user,
             institucion=institucion if institucion else None
         )
 
-        # 🔹 Iniciar sesión automáticamente
+        #  Iniciar sesión automáticamente
         login(request, user)
 
-        # 🔹 Redirección según rol
+        #  Redirección según rol
         if rol == "profesor":
             messages.success(request, f"✅ Bienvenido profesor {nombre} {apellido}")
             return redirect("dashboard_profesor")
@@ -162,7 +162,7 @@ def api_register(request):
     }, status=201)
 
 
-# 🔹 NUEVOS endpoints con sesión Django
+#  NUEVOS endpoints con sesión Django
 
 @api_view(['POST'])
 def api_register_session(request):
@@ -207,7 +207,7 @@ def api_register_session(request):
         last_name=last_name
     )
 
-        # ✅ Crear el perfil automáticamente
+        #  Crear el perfil automáticamente
     PerfilUsuario.objects.create(
         user=user,
         institucion=institucion,
@@ -321,7 +321,7 @@ class EditarPerfilForm(forms.ModelForm):
 
     class Meta:
         model = PerfilUsuario
-        fields = ['foto_perfil']  # 👈 Solo este campo viene del modelo PerfilUsuario
+        fields = ['foto_perfil']  #  Solo este campo viene del modelo PerfilUsuario
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')
@@ -352,7 +352,7 @@ def editar_perfil_view(request):
             form.save()
             messages.success(request, "✅ Perfil actualizado correctamente.")
 
-            # 🔹 Redirección según el tipo de usuario
+            #  Redirección según el tipo de usuario
             if request.user.is_superuser:
                 return redirect('admin_dashboard')
             elif request.user.is_staff:
@@ -390,7 +390,7 @@ class CustomPasswordChangeView(PasswordChangeView):
 
     def get_success_url(self):
         user = self.request.user
-        # 🔹 Redirección según el tipo de usuario
+        #  Redirección según el tipo de usuario
         if user.is_superuser:
             return reverse_lazy('admin_dashboard')
         elif user.is_staff:

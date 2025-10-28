@@ -1,17 +1,24 @@
 from django import forms
 from .models import MaterialDidactico
+from .models import Evaluacion
+from django import forms
+from .models import Curso
 
 class MaterialForm(forms.ModelForm):
     class Meta:
         model = MaterialDidactico
-        fields = ['titulo', 'tipo', 'archivo', 'enlace']
+        fields = ['titulo', 'archivo', 'enlace']  # 🔹 quitamos 'tipo'
         widgets = {
-            'titulo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. Guía de estudio Unidad 1'}),
-            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'titulo': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej. Guía de estudio Unidad 1'
+            }),
             'archivo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'enlace': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://...'}),
+            'enlace': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://...'
+            }),
         }
-
 from django import forms
 from auth_app.models import PerfilUsuario
 
@@ -48,3 +55,27 @@ class EditarPerfilForm(forms.ModelForm):
             self.user.save()
             perfil.save()
         return perfil
+    
+
+
+class EvaluacionForm(forms.ModelForm):
+    class Meta:
+        model = Evaluacion
+        fields = ['nombre', 'descripcion', 'curso', 'fecha']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. Examen Parcial 1'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Breve descripción de la evaluación...'}),
+            'curso': forms.Select(attrs={'class': 'form-select'}),
+            'fecha': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        }
+
+
+class CursoForm(forms.ModelForm):
+    class Meta:
+        model = Curso
+        fields = ['nombre', 'descripcion', 'categoria']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del curso'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Descripción breve'}),
+            'categoria': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Categoría'}),
+        }
