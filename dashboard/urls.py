@@ -10,7 +10,7 @@ urlpatterns = [
     path('admin-panel/', views.dashboard_admin, name='dashboard_admin'),
 
     # Profesor
-    path('prueba/', views.prueba_jwt, name='prueba-jwt'),
+    #path('prueba/', views.prueba_jwt, name='prueba-jwt'),
     path('profesor/cursos/', views.profesor_cursos, name='profesor_cursos'),
     path('profesor/evaluaciones/', views.profesor_evaluaciones, name='profesor_evaluaciones'),
     path('profesor/material/', views.profesor_material, name='profesor_material'),
