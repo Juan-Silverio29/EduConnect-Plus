@@ -7,6 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background: #f4f9ff; font-family: 'Segoe UI', sans-serif; }
+
     .sidebar {
       height: 100vh;
       background: #0d1b2a;
@@ -65,21 +66,41 @@
   <div class="d-flex">
     <!-- Sidebar -->
     <div class="sidebar">
-      <h2>EduConnect</h2>
+      <h2>EduConnect+</h2>
       <a href="{% url 'dashboard_profesor' %}" class="active">🏠 Dashboard</a>
       <a href="{% url 'profesor_cursos' %}">📚 Mis Cursos</a>
       <a href="{% url 'profesor_evaluaciones' %}">📝 Evaluaciones</a>
       <a href="{% url 'profesor_material' %}">📤 Material Didáctico</a>
-
-      <!-- ✅ Nuevo botón de Foro Académico -->
       <a href="{% url 'foros_profesor' %}">💬 Foro Académico</a>
-
       <a href="{% url 'configuracion_profesor' %}">⚙️ Configuración</a>
       <a href="{% url 'logout' %}" class="logout">🚪 Cerrar Sesión</a>
     </div>
 
-    <!-- Main Content -->
+    <!-- Contenido principal -->
     <div class="p-4 flex-grow-1">
+
+      <!-- Mensajes -->
+      {% if messages %}
+        <div id="alert-container" class="position-relative">
+          {% for message in messages %}
+            <div class="alert alert-dismissible fade show 
+                        {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}" 
+                role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+        <script>
+          // 💡 Elimina los mensajes visualmente y de sesión después de unos segundos
+          setTimeout(() => {
+            document.querySelectorAll('#alert-container .alert').forEach(el => el.remove());
+          }, 5);
+        </script>
+      {% endif %}
+
+
+      <!-- Bienvenida -->
       <div class="welcome-card">
         <h2>👩‍🏫 Hola, {{ user.first_name }} {{ user.last_name }}!</h2>
         <p>Bienvenido a tu panel de profesor en EduConnect 📚</p>
@@ -90,39 +111,34 @@
         <div class="col-md-3 mb-3">
           <div class="stat-card stat-blue">
             <h5>Cursos Activos</h5>
-            <p>{{ cursos|length|default:0 }}</p>
+            <p>{{ cursos_activos }}</p>
           </div>
         </div>
-        <div class="col-md-3 mb-3">
-          <div class="stat-card stat-green">
-            <h5>Alumnos Inscritos</h5>
-            <p>{{ alumnos_inscritos|default:0 }}</p>
-          </div>
-        </div>
+
         <div class="col-md-3 mb-3">
           <div class="stat-card stat-orange">
             <h5>Tareas Revisadas</h5>
-            <p>{{ tareas_revisadas|default:0 }}</p>
+            <p>{{ tareas_revisadas }}</p>
           </div>
         </div>
         <div class="col-md-3 mb-3">
           <div class="stat-card stat-purple">
             <h5>Material Subido</h5>
-            <p>{{ material_subido|default:0 }}</p>
+            <p>{{ material_subido }}</p>
           </div>
         </div>
       </div>
 
-      <!-- Cursos Recientes -->
+      <!-- Cursos recientes -->
       <h4 class="mt-4">Cursos Recientes</h4>
       <div class="row g-3 mt-2">
         {% for curso in cursos %}
         <div class="col-md-6">
           <div class="card course-card">
             <div class="card-body">
-              <h5>{{ curso.nombre }} - Grupo {{ curso.grupo }}</h5>
-              <p>Alumnos: {{ curso.alumnos }}</p>
-              <a href="#" class="btn btn-primary btn-sm mt-2">Ver Curso</a>
+              <h5>{{ curso.nombre }} {% if curso.grupo %}- Grupo {{ curso.grupo }}{% endif %}</h5>
+              <p>📘 {{ curso.categoria|default:"Sin categoría" }}</p>
+              <a href="{% url 'detalle_curso' curso.id %}" class="btn btn-primary btn-sm mt-2">Ver Curso</a>
             </div>
           </div>
         </div>
@@ -131,7 +147,7 @@
         {% endfor %}
       </div>
 
-      <!-- Evaluaciones Recientes -->
+      <!-- Evaluaciones -->
       <h4 class="mt-4">Evaluaciones Próximas</h4>
       <table class="table table-striped mt-2">
         <thead>
@@ -157,7 +173,9 @@
   </div>
 
   <footer class="footer mt-4 text-center">
-    <p>&copy; 2024 EduConnect+. Todos los derechos reservados.</p>
+    <p>&copy; 2025 EduConnect+. Todos los derechos reservados.</p>
   </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -7,7 +7,21 @@ from django.http import HttpResponse
 from auth_app.models import PerfilUsuario
 from forum.models import Foro
 from .models import MaterialDidactico
+from .models import Curso, Inscripcion, MaterialDidactico
 from .forms import MaterialForm
+<<<<<<< HEAD
+=======
+from django.shortcuts import render, redirect
+from auth_app.models import PerfilUsuario 
+from django.contrib import messages
+from django.shortcuts import get_object_or_404
+from forum.models import Foro
+from .forms import EvaluacionForm
+from .models import Evaluacion
+from django.db import models
+from .forms import CursoForm
+import os
+>>>>>>> origin/paul-dev
 
 # ---------------------------
 # Redirección según el rol
@@ -82,16 +96,39 @@ def admin_estadisticas(request):
 # ---------------------------
 @login_required
 def dashboard_profesor(request):
-    return render(request, "dashboard_profesor.html")
+    profesor = request.user
+
+    # Cursos activos creados por el profesor
+    cursos_activos = Curso.objects.filter(profesor=profesor).count()
+
+    # Alumnos inscritos en los cursos del profesor
+    alumnos_inscritos = Inscripcion.objects.filter(curso__profesor=profesor).count()
+
+    # Materiales subidos por el profesor
+    materiales_subidos = MaterialDidactico.objects.filter(profesor=profesor).count()
+
+    # (Opcional) Tareas revisadas — si tienes modelo de tareas, aquí podrías agregarlo
+    tareas_revisadas = 0  # Por ahora lo dejamos en 0 si aún no existe ese modelo
+
+    context = {
+        "cursos_activos": cursos_activos,
+        "alumnos_inscritos": alumnos_inscritos,
+        "tareas_revisadas": tareas_revisadas,
+        "material_subido": materiales_subidos,
+    }
+
+    return render(request, "dashboard_profesor.html", context)
+
 
 
 @login_required
 def profesor_cursos(request):
-    cursos = [
-        {"nombre": "Matemáticas I", "grupo": "1A", "alumnos": 30},
-        {"nombre": "Historia", "grupo": "2B", "alumnos": 25},
-    ]
+    """
+    Muestra los cursos creados por el profesor logueado.
+    """
+    cursos = Curso.objects.filter(profesor=request.user).order_by("-id")
     return render(request, "profesor_cursos.html", {"cursos": cursos})
+
 
 
 @login_required
@@ -105,21 +142,73 @@ def profesor_evaluaciones(request):
 
 @login_required
 def profesor_material(request):
+<<<<<<< HEAD
+=======
+    materiales = [
+        {"titulo": "Apuntes Matemáticas", "curso": "Matemáticas I"},
+        {"titulo": "Libro Historia", "curso": "Historia"},
+    ]
+    return render(request, "profesor_material.html", {"materiales": materiales})
+
+@login_required
+def profesor_material(request):
+    # 🔹 Mostrar materiales del profesor
+>>>>>>> origin/paul-dev
     materiales = MaterialDidactico.objects.filter(profesor=request.user).order_by('-fecha')
+
+    # 🔹 Traer cursos del profesor para el selector
+    cursos = Curso.objects.filter(profesor=request.user)
 
     if request.method == 'POST':
         form = MaterialForm(request.POST, request.FILES)
         if form.is_valid():
             material = form.save(commit=False)
             material.profesor = request.user
+
+            # 🔹 Asociar el curso seleccionado (si existe)
+            curso_id = request.POST.get('curso')
+            if curso_id:
+                try:
+                    material.curso = Curso.objects.get(id=curso_id, profesor=request.user)
+                except Curso.DoesNotExist:
+                    material.curso = None
+
+            # 🔹 Detectar tipo automáticamente
+            archivo = material.archivo
+            if archivo:
+                ext = os.path.splitext(archivo.name)[1].lower()
+                if ext in ['.pdf']:
+                    material.tipo = 'PDF'
+                elif ext in ['.ppt', '.pptx']:
+                    material.tipo = 'Presentación'
+                elif ext in ['.mp4', '.mov', '.avi']:
+                    material.tipo = 'Video'
+                elif ext in ['.doc', '.docx']:
+                    material.tipo = 'Documento'
+                else:
+                    material.tipo = 'Otro'
+            elif material.enlace:
+                material.tipo = 'Enlace'
+            else:
+                material.tipo = 'Otro'
+
             material.save()
             messages.success(request, "✅ Material subido correctamente.")
             return redirect('dashboard:profesor_material')
     else:
         form = MaterialForm()
 
+<<<<<<< HEAD
     return render(request, 'profesor_material.html', {'materiales': materiales, 'form': form})
 
+=======
+    # 🔹 Enviar cursos al template
+    return render(request, 'profesor_material.html', {
+        'form': form,
+        'materiales': materiales,
+        'cursos': cursos
+    })
+>>>>>>> origin/paul-dev
 
 @login_required
 def editar_material_view(request, id):
@@ -149,6 +238,7 @@ def foros_profesor(request):
     foros = Foro.objects.all().order_by('-fecha_creacion')
     return render(request, 'foros_profesor.html', {'foros': foros})
 
+<<<<<<< HEAD
 
 # ---------------------------
 # DASHBOARD: USUARIO
@@ -156,3 +246,266 @@ def foros_profesor(request):
 @login_required
 def dashboard_user(request):
     return render(request, "dashboard_user.html")
+=======
+@login_required
+def crear_curso(request):
+    """
+    Vista para que el profesor cree un nuevo curso.
+    """
+    if not request.user.is_staff:
+        messages.error(request, "No tienes permiso para crear cursos.")
+        return redirect("dashboard_user")
+
+    if request.method == "POST":
+        nombre = request.POST.get("nombre")
+        descripcion = request.POST.get("descripcion")
+        categoria = request.POST.get("categoria")
+
+        if not nombre or not descripcion:
+            messages.error(request, "Por favor completa todos los campos.")
+            return redirect("crear_curso")
+
+        # Crear curso asociado al profesor
+        Curso.objects.create(
+            nombre=nombre,
+            descripcion=descripcion,
+            categoria=categoria,
+            profesor=request.user
+        )
+
+        messages.success(request, "📘 Curso creado correctamente.")
+        return redirect("dashboard_profesor")
+
+    return render(request, "crear_curso.html")
+
+
+# 👨‍🎓 Vista del alumno: ver cursos disponibles
+@login_required
+def cursos_disponibles(request):
+    cursos = Curso.objects.exclude(inscritos__alumno=request.user)
+    return render(request, "cursos_disponibles.html", {"cursos": cursos})
+
+
+# 👨‍🎓 Vista del alumno: inscribirse
+@login_required
+def inscribirse_curso(request, curso_id):
+    curso = get_object_or_404(Curso, id=curso_id)
+    Inscripcion.objects.get_or_create(alumno=request.user, curso=curso)
+    messages.success(request, f"✅ Te has inscrito en {curso.nombre}.")
+    return redirect("cursos_disponibles")
+
+# 👨‍🎓 Vista del alumno: ver mis recursos
+@login_required
+def mis_recursos(request):
+    cursos_inscritos = Curso.objects.filter(inscritos__alumno=request.user)
+    materiales = MaterialDidactico.objects.filter(curso__in=cursos_inscritos)
+    return render(request, "mis_recursos.html", {"materiales": materiales})
+
+@login_required
+def detalle_curso(request, curso_id):
+    """
+    Vista para mostrar detalles de un curso, alumnos inscritos
+    y permitir al profesor subir materiales con detección automática de tipo.
+    """
+    curso = get_object_or_404(Curso, id=curso_id, profesor=request.user)
+    materiales = MaterialDidactico.objects.filter(curso=curso)
+
+    # 🔹 Alumnos inscritos (según la tabla Inscripcion)
+    try:
+        alumnos = Inscripcion.objects.filter(curso=curso).select_related('alumno')
+    except:
+        alumnos = []
+
+    if request.method == "POST":
+        form = MaterialForm(request.POST, request.FILES)
+        if form.is_valid():
+            material = form.save(commit=False)
+            material.curso = curso
+            material.profesor = request.user
+
+            # 🔹 Detección automática del tipo de archivo
+            archivo = request.FILES.get("archivo", None)
+            enlace = request.POST.get("enlace", "")
+
+            if archivo:
+                extension = os.path.splitext(archivo.name)[1].lower()
+
+                if extension in [".pdf"]:
+                    material.tipo = "PDF"
+                elif extension in [".doc", ".docx"]:
+                    material.tipo = "Documento Word"
+                elif extension in [".ppt", ".pptx"]:
+                    material.tipo = "Presentación PowerPoint"
+                elif extension in [".xls", ".xlsx"]:
+                    material.tipo = "Hoja de cálculo"
+                elif extension in [".jpg", ".jpeg", ".png"]:
+                    material.tipo = "Imagen"
+                elif extension in [".mp4", ".avi", ".mov", ".mkv"]:
+                    material.tipo = "Video"
+                elif extension in [".mp3", ".wav"]:
+                    material.tipo = "Audio"
+                elif extension in [".txt"]:
+                    material.tipo = "Texto"
+                else:
+                    material.tipo = f"Archivo ({extension})"
+            elif enlace:
+                material.tipo = "Enlace web"
+            else:
+                material.tipo = "Otro"
+
+            material.save()
+            messages.success(request, "✅ Material subido correctamente.")
+            return redirect("detalle_curso", curso_id=curso.id)
+    else:
+        form = MaterialForm()
+
+    context = {
+        "curso": curso,
+        "materiales": materiales,
+        "alumnos": alumnos,
+        "form": form
+    }
+    return render(request, "detalle_curso.html", context)
+
+@login_required
+def editar_curso(request, curso_id):
+    """
+    Permite al profesor editar la información de un curso existente.
+    """
+    curso = get_object_or_404(Curso, id=curso_id, profesor=request.user)
+
+    if request.method == "POST":
+        form = CursoForm(request.POST, instance=curso)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "✅ El curso se actualizó correctamente.")
+            return redirect("profesor_cursos")
+    else:
+        form = CursoForm(instance=curso)
+
+    context = {
+        "form": form,
+        "curso": curso
+    }
+    return render(request, "editar_curso.html", context)
+
+
+@login_required
+def asignar_material_a_curso(request, material_id):
+    try:
+        material = MaterialDidactico.objects.get(id=material_id, profesor=request.user)
+    except MaterialDidactico.DoesNotExist:
+        messages.error(request, "❌ No se encontró el material.")
+        return redirect('profesor_material')
+
+    if request.method == 'POST':
+        curso_id = request.POST.get('curso')
+        try:
+            curso = Curso.objects.get(id=curso_id, profesor=request.user)
+            material.curso = curso
+            material.save()
+            messages.success(request, f"✅ Material asignado correctamente al curso {curso.nombre}.")
+        except Curso.DoesNotExist:
+            messages.error(request, "⚠️ Curso no válido.")
+
+    return redirect('profesor_material')
+
+# 📋 Mostrar evaluaciones del profesor
+@login_required
+def profesor_evaluaciones(request):
+    evaluaciones = Evaluacion.objects.filter(profesor=request.user).order_by('-fecha')
+    return render(request, "profesor_evaluaciones.html", {"evaluaciones": evaluaciones})
+
+
+# ➕ Crear evaluación
+@login_required
+def crear_evaluacion(request):
+    cursos = Curso.objects.filter(profesor=request.user)
+
+    if request.method == 'POST':
+        form = EvaluacionForm(request.POST)
+        if form.is_valid():
+            evaluacion = form.save(commit=False)
+            evaluacion.profesor = request.user
+            evaluacion.save()
+            messages.success(request, "✅ Evaluación creada correctamente.")
+            return redirect('profesor_evaluaciones')
+    else:
+        form = EvaluacionForm()
+
+    return render(request, 'crear_evaluacion.html', {'form': form, 'cursos': cursos})
+
+
+# ✏️ Editar evaluación
+@login_required
+def editar_evaluacion(request, evaluacion_id):
+    evaluacion = get_object_or_404(Evaluacion, id=evaluacion_id, profesor=request.user)
+    if request.method == 'POST':
+        form = EvaluacionForm(request.POST, instance=evaluacion)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "✏️ Evaluación actualizada correctamente.")
+            return redirect('profesor_evaluaciones')
+    else:
+        form = EvaluacionForm(instance=evaluacion)
+
+    return render(request, 'editar_evaluacion.html', {'form': form})
+
+
+# 🗑️ Eliminar evaluación
+@login_required
+def eliminar_evaluacion(request, evaluacion_id):
+    evaluacion = get_object_or_404(Evaluacion, id=evaluacion_id, profesor=request.user)
+    evaluacion.delete()
+    messages.success(request, "🗑️ Evaluación eliminada correctamente.")
+    return redirect('profesor_evaluaciones')
+
+@login_required
+def detalle_evaluacion(request, evaluacion_id):
+    """
+    Muestra el detalle de una evaluación y permite agregar materiales del curso a esta evaluación específica.
+    """
+    evaluacion = get_object_or_404(Evaluacion, id=evaluacion_id, profesor=request.user)
+    curso = evaluacion.curso
+
+    # 🔹 Materiales ya asociados a esta evaluación
+    materiales_asignados = evaluacion.materiales.all()
+
+    # 🔹 Materiales disponibles para agregar (del curso del profesor)
+    materiales_disponibles = MaterialDidactico.objects.filter(curso=curso, profesor=request.user)
+
+    # 🔹 Agregar material seleccionado a la evaluación
+    if request.method == "POST":
+        material_id = request.POST.get("material_id")
+        if material_id:
+            try:
+                material = MaterialDidactico.objects.get(id=material_id, curso=curso, profesor=request.user)
+                evaluacion.materiales.add(material)
+                messages.success(request, f"📘 El material '{material.titulo}' se agregó a la evaluación correctamente.")
+            except MaterialDidactico.DoesNotExist:
+                messages.error(request, "❌ El material seleccionado no existe o no pertenece a este curso.")
+        return redirect("detalle_evaluacion", evaluacion_id=evaluacion.id)
+
+    context = {
+        "evaluacion": evaluacion,
+        "curso": curso,
+        "materiales_asignados": materiales_asignados,
+        "materiales_disponibles": materiales_disponibles,
+    }
+    return render(request, "detalle_evaluacion.html", context)
+
+@login_required
+def quitar_material_evaluacion(request, evaluacion_id, material_id):
+    """
+    Elimina la relación entre un material y una evaluación (sin borrar el archivo).
+    """
+    evaluacion = get_object_or_404(Evaluacion, id=evaluacion_id, profesor=request.user)
+    try:
+        material = evaluacion.materiales.get(id=material_id)
+        evaluacion.materiales.remove(material)
+        messages.success(request, f"🗑️ El material '{material.titulo}' se quitó de la evaluación.")
+    except MaterialDidactico.DoesNotExist:
+        messages.error(request, "❌ El material no pertenece a esta evaluación.")
+
+    return redirect("detalle_evaluacion", evaluacion_id=evaluacion.id)
+>>>>>>> origin/paul-dev
