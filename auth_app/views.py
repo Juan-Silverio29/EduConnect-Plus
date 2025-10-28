@@ -112,7 +112,6 @@ def register_view(request):
         institucion = request.POST.get("institucion", "").strip()
 
         # Validaciones básicas
-        #  Validaciones básicas
         if password1 != password2:
             messages.error(request, "Las contraseñas no coinciden")
             return redirect("register")
@@ -138,21 +137,15 @@ def register_view(request):
 
         # Crear perfil
         PerfilUsuario.objects.create(
-        #  Crear perfil asociado con institución
-        perfil = PerfilUsuario.objects.create(
             user=user,
-            institucion=institucion if institucion else None
-        )
+            institucion=institucion if institucion else None,
+            foto_perfil="img/default_user.png"
         )
 
         # Iniciar sesión automáticamente
         login(request, user)
 
         # Redirección según rol
-        #  Iniciar sesión automáticamente
-        login(request, user)
-
-        #  Redirección según rol
         if rol == "profesor":
             messages.success(request, f"✅ Bienvenido profesor {nombre} {apellido}")
             return redirect("dashboard_profesor")
@@ -217,28 +210,6 @@ def api_register(request):
         }, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    user = User.objects.create_user(
-        username=username,
-        email=email,
-        password=password1,
-        first_name=nombre,
-        last_name=apellido
-    )
-
-    if rol == "profesor":
-        user.is_staff = True
-        user.save()
-
-    refresh = RefreshToken.for_user(user)
-    return Response({
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-        'rol': rol
-    }, status=201)
-
-
-#  NUEVOS endpoints con sesión Django
-
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -301,27 +272,12 @@ def api_register_session(request):
             is_superuser=False
         )
 
-
-        # Crear perfil
+        # Crear perfil (SOLO UNA VEZ)
         PerfilUsuario.objects.create(
             user=user,
             institucion=institucion,
             foto_perfil="img/default_user.png"
         )
-
-        #  Crear el perfil automáticamente
-    PerfilUsuario.objects.create(
-        user=user,
-        institucion=institucion,
-        foto_perfil="img/default_user.png"  # si no sube una
-    )
-
-    except Exception as e:
-    # Manejar cualquier error
-    return render(request, 'register.html', {
-        'error': f'Error al crear el usuario: {str(e)}'
-    })
-
 
         # ✅ SOLUCIÓN: Especificar el backend manualmente antes del login
         user.backend = 'django.contrib.auth.backends.ModelBackend'
@@ -454,10 +410,7 @@ class EditarPerfilForm(forms.ModelForm):
 
     class Meta:
         model = PerfilUsuario
-
-        fields = ['foto_perfil']
-
-        fields = ['foto_perfil']  #  Solo este campo viene del modelo PerfilUsuario
+        fields = ['foto_perfil']  # Solo este campo viene del modelo PerfilUsuario
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')
@@ -485,7 +438,7 @@ def editar_perfil_view(request):
             form.save()
             messages.success(request, "✅ Perfil actualizado correctamente.")
 
-            #  Redirección según el tipo de usuario
+            # Redirección según el tipo de usuario
             if request.user.is_superuser:
                 return redirect('/admin/')
             elif request.user.is_staff:
@@ -522,7 +475,7 @@ class CustomPasswordChangeView(PasswordChangeView):
 
     def get_success_url(self):
         user = self.request.user
-        #  Redirección según el tipo de usuario
+        # Redirección según el tipo de usuario
         if user.is_superuser:
             return reverse_lazy('admin_dashboard')
         elif user.is_staff:
