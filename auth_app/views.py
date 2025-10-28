@@ -392,7 +392,7 @@ def profesor_dashboard(request):
         "tareas_revisadas": 10,
         "material_subido": 5,
     }
-    return render(request, "profesor_dashboard.html", context)
+    return render(request, "dashboard_profesor.html", context)
 
 # ------------------------------
 # VISTAS DE CONFIGURACIÓN

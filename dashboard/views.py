@@ -148,7 +148,7 @@ def profesor_material(request):
 @login_required
 def profesor_material(request):
     # 🔹 Mostrar materiales del profesor
-    materiales = MaterialDidactico.objects.filter(profesor=request.user).order_by('-fecha')
+    materiales = MaterialDidactico.objects.filter(profesor=request.user).order_by('-fecha_subida')
 
     # 🔹 Traer cursos del profesor para el selector
     cursos = Curso.objects.filter(profesor=request.user)

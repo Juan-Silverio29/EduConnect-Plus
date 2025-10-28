@@ -15,7 +15,7 @@ def lista_recursos(request):
     cursos_inscritos = Curso.objects.filter(inscritos__alumno=request.user)
 
     # Filtrar materiales solo de esos cursos
-    materiales = MaterialDidactico.objects.filter(curso__in=cursos_inscritos).order_by('-fecha')
+    materiales = MaterialDidactico.objects.filter(curso__in=cursos_inscritos).order_by('-fecha_subida')
 
     # Filtro opcional por curso desde el formulario select
     curso_id = request.GET.get("curso")

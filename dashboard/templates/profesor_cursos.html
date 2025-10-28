@@ -87,8 +87,8 @@
 
     <!-- Botones superiores -->
     <div class="top-actions">
-      <a href="{% url 'dashboard_profesor' %}" class="btn-volver">← Volver al Dashboard</a>
-      <a href="{% url 'crear_curso' %}" class="btn-crear">➕ Crear nuevo curso</a>
+      <a href="{% url 'dashboard:dashboard_profesor' %}" class="btn-volver">← Volver al Dashboard</a>
+      <a href="{% url 'dashboard:crear_curso' %}" class="btn-crear">➕ Crear nuevo curso</a>
     </div>
 
     {% if cursos %}
@@ -103,8 +103,8 @@
                 <p><strong>Grupo:</strong> {{ curso.grupo }}</p>
               {% endif %}
               <div class="d-flex justify-content-between mt-3">
-                <a href="{% url 'detalle_curso' curso.id %}" class="btn btn-primary btn-sm">👁 Ver</a>
-                <a href="{% url 'editar_curso' curso.id %}" class="btn btn-warning">✏️ Editar</a>
+                <a href="{% url 'dashboard:detalle_curso' curso.id %}" class="btn btn-primary btn-sm">👁 Ver</a>
+                <a href="{% url 'dashboard:editar_curso' curso.id %}" class="btn btn-warning">✏️ Editar</a>
                 <a href="#" class="btn btn-danger btn-sm">🗑 Eliminar</a>
               </div>
             </div>
@@ -115,7 +115,7 @@
     {% else %}
       <div class="empty-state">
         <h5>No has creado cursos aún.</h5>
-        <a href="{% url 'crear_curso' %}" class="btn-crear">➕ Crear tu primer curso</a>
+        <a href="{% url 'dashboard:crear_curso' %}" class="btn-crear">➕ Crear tu primer curso</a>
       </div>
     {% endif %}
   </div>

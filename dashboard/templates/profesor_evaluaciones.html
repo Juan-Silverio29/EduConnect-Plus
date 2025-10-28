@@ -146,9 +146,9 @@
           <p>📅 <strong>Fecha:</strong> {{ eval.fecha }}</p>
 
           <div class="d-flex justify-content-start mt-2">
-            <a href="{% url 'detalle_evaluacion' eval.id %}" class="btn btn-primary btn-sm btn-accion">👁 Ver</a>
-            <a href="{% url 'editar_evaluacion' eval.id %}" class="btn btn-warning btn-sm btn-accion">✏️ Editar</a>
-            <a href="{% url 'eliminar_evaluacion' eval.id %}" class="btn btn-danger btn-sm btn-accion">🗑 Eliminar</a>  
+            <a href="{% url 'dashboard:detalle_evaluacion' eval.id %}" class="btn btn-primary btn-sm btn-accion">👁 Ver</a>
+            <a href="{% url 'dashboard:editar_evaluacion' eval.id %}" class="btn btn-warning btn-sm btn-accion">✏️ Editar</a>
+            <a href="{% url 'dashboard:eliminar_evaluacion' eval.id %}" class="btn btn-danger btn-sm btn-accion">🗑 Eliminar</a>
           </div>
         </div>
       {% endfor %}
@@ -156,9 +156,9 @@
       <p class="text-center text-muted mt-3">No hay evaluaciones programadas.</p>
     {% endif %}
 
-    <a href="{% url 'crear_evaluacion' %}" class="btn-crear">➕ Crear nueva evaluación</a>
+    <a href="{% url 'dashboard:crear_evaluacion' %}" class="btn-crear">➕ Crear nueva evaluación</a>
     <div class="text-center mt-3">
-      <a href="{% url 'dashboard_profesor' %}" class="btn-volver">← Volver al dashboard</a>
+      <a href="{% url 'dashboard:dashboard_profesor' %}" class="btn-volver">← Volver al dashboard</a>
     </div>
   </div>
 
