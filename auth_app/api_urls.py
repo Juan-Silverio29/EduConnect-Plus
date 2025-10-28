@@ -1,3 +1,4 @@
+# auth_app/api_urls.py
 from django.urls import path
 from .api_views import register_api, MyTokenObtainPairView, refresh_token
 

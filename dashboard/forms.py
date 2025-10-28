@@ -1,5 +1,7 @@
+# dashboard/forms.py
 from django import forms
 from .models import MaterialDidactico
+from auth_app.models import PerfilUsuario
 
 class MaterialForm(forms.ModelForm):
     class Meta:
@@ -12,9 +14,6 @@ class MaterialForm(forms.ModelForm):
             'enlace': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://...'}),
         }
 
-from django import forms
-from auth_app.models import PerfilUsuario
-
 class EditarPerfilForm(forms.ModelForm):
     username = forms.CharField(label="Usuario", max_length=150, required=False, disabled=True)
     first_name = forms.CharField(label="Nombre", max_length=150, required=False)
@@ -26,9 +25,8 @@ class EditarPerfilForm(forms.ModelForm):
         fields = ['foto_perfil', 'institucion']
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user')  # ✅ guardamos referencia del usuario
+        self.user = kwargs.pop('user')
         super().__init__(*args, **kwargs)
-        # inicializamos los valores actuales
         self.fields['username'].initial = self.user.username
         self.fields['first_name'].initial = self.user.first_name
         self.fields['last_name'].initial = self.user.last_name
@@ -36,14 +34,9 @@ class EditarPerfilForm(forms.ModelForm):
 
     def save(self, commit=True):
         perfil = super().save(commit=False)
-
-        # ✅ actualizar los datos del modelo User
         self.user.first_name = self.cleaned_data.get('first_name')
         self.user.last_name = self.cleaned_data.get('last_name')
-
-        # ✅ actualizar institución
         perfil.institucion = self.cleaned_data.get('institucion')
-
         if commit:
             self.user.save()
             perfil.save()

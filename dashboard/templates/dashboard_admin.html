@@ -1,49 +1,94 @@
-<!-- d -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard Admin - EduConnect+</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body {
-      background: #fff;
-    }
-    .sidebar {
-      height: 100vh;
-      background: #003d80;
-      color: white;
-      padding: 20px;
-    }
-    .sidebar a {
-      color: white;
-      text-decoration: none;
-      display: block;
-      padding: 10px;
-      border-radius: 8px;
-    }
-    .sidebar a:hover {
-      background: #0056b3;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <div class="d-flex">
-    <div class="sidebar">
-      <h2 class="mb-4">Administrador</h2>
-      <a href="#">👥 Usuarios</a>
-      <a href="#">📈 Estadísticas</a>
-      <a href="#">⚙️ Configuración</a>
-      <a href="{% url 'logout' %}">🚪 Cerrar sesión</a>
+<body class="bg-gray-100 text-gray-800">
+
+<header class="bg-blue-600 text-white p-4 shadow-md">
+    <h1 class="text-2xl font-bold">Panel de Administrador</h1>
+    <p class="text-sm">Bienvenido, {{ request.user.username }}</p>
+</header>
+
+<main class="p-6">
+    <!-- Tarjetas de estadísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white shadow p-4 rounded">
+            <p class="text-sm font-semibold">Usuarios Totales</p>
+            <p class="text-2xl font-bold">{{ total_usuarios }}</p>
+        </div>
+        <div class="bg-white shadow p-4 rounded">
+            <p class="text-sm font-semibold">Profesores</p>
+            <p class="text-2xl font-bold">{{ total_profesores }}</p>
+        </div>
+        <div class="bg-white shadow p-4 rounded">
+            <p class="text-sm font-semibold">Estudiantes</p>
+            <p class="text-2xl font-bold">{{ total_estudiantes }}</p>
+        </div>
+        <div class="bg-white shadow p-4 rounded">
+            <p class="text-sm font-semibold">Materiales</p>
+            <p class="text-2xl font-bold">{{ total_materiales }}</p>
+        </div>
     </div>
-    <div class="p-4 flex-grow-1">
-      <h1 class="text-primary">Panel de Administración</h1>
-      <p>Gestiona usuarios, cursos y estadísticas del sistema.</p>
+
+    <!-- Tabla de usuarios -->
+    <div class="bg-white shadow rounded p-4 mb-6">
+        <h2 class="text-lg font-semibold mb-2">Usuarios</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full table-auto border-collapse">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="border px-2 py-1">ID</th>
+                        <th class="border px-2 py-1">Usuario</th>
+                        <th class="border px-2 py-1">Nombre</th>
+                        <th class="border px-2 py-1">Email</th>
+                        <th class="border px-2 py-1">Rol</th>
+                        <th class="border px-2 py-1">Institución</th>
+                        <th class="border px-2 py-1">Activo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in usuarios %}
+                    <tr class="hover:bg-gray-100">
+                        <td class="border px-2 py-1">{{ user.id }}</td>
+                        <td class="border px-2 py-1">{{ user.username }}</td>
+                        <td class="border px-2 py-1">{{ user.nombre }}</td>
+                        <td class="border px-2 py-1">{{ user.email }}</td>
+                        <td class="border px-2 py-1">{{ user.rol }}</td>
+                        <td class="border px-2 py-1">{{ user.institucion }}</td>
+                        <td class="border px-2 py-1">
+                            {% if user.activo %}
+                                <span class="text-green-600 font-bold">Sí</span>
+                            {% else %}
+                                <span class="text-red-600 font-bold">No</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">No hay usuarios registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-  </div>
-  <footer class="footer mt-4 text-center">
-    <p>&copy; 2024 EduConnect+. Todos los derechos reservados.</p>
-  </footer>
+
+    <!-- Lista de materiales -->
+    <div class="bg-white shadow rounded p-4">
+        <h2 class="text-lg font-semibold mb-2">Materiales</h2>
+        <ul class="list-disc list-inside">
+            {% for mat in materiales %}
+            <li>{{ mat.titulo|default:"Sin título" }} - {{ mat.descripcion|default:"-" }}</li>
+            {% empty %}
+            <li>No hay materiales disponibles.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</main>
+
 </body>
 </html>

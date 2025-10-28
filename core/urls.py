@@ -25,16 +25,16 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('landing.urls')),         # Página principal
     path('auth/', include('auth_app.urls')),   # Login y Registro
-    path('dashboard/', include('dashboard.urls')), # Dashboards
+    path('dashboard/', include(('dashboard.urls', 'dashboard'), namespace='dashboard')),  # <-- namespace
     path("resources/", include("resources.urls")),
     path("forum/", include("forum.urls")),
-    path("dashboard/", include("dashboard.urls")),
-    path('api/auth/', include('auth_app.api_urls')),
-
     #path('api/auth/', include('auth_app.api_urls')),
+    path('api/', include('auth_app.api_urls')),
+    #path('auth/', include('auth_app.urls')),
 
 
-] 
+]
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

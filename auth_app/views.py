@@ -6,19 +6,79 @@ from django.contrib import messages
 from django import forms
 from .models import PerfilUsuario
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout
-from django.shortcuts import redirect
 from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy
 
-
 # DRF y JWT
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import RegisterSerializer
+
+# reCAPTCHA
+import requests
+import re
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 # ------------------------------
-# VISTAS NORMALES (Django)
+# FUNCIONES AUXILIARES
+# ------------------------------
+
+def validar_recaptcha(token):
+    """Valida el token de reCAPTCHA"""
+    secret = "6LeyVfgrAAAAAAeSflieGqqrffSw9-i_tzWIJMgG"
+    url = "https://www.google.com/recaptcha/api/siteverify"
+    data = {
+        "secret": secret,
+        "response": token
+    }
+    try:
+        resp = requests.post(url, data=data, timeout=5)
+        result = resp.json()
+        return result.get("success", False)
+    except requests.RequestException:
+        return False
+
+def validar_password_segura(password):
+    """
+    Valida que la contraseña cumpla con requisitos de seguridad
+    """
+    if len(password) < 8:
+        return False, "La contraseña debe tener al menos 8 caracteres"
+    
+    if not re.search(r"[A-Z]", password):
+        return False, "La contraseña debe tener al menos una letra mayúscula"
+    
+    if not re.search(r"[a-z]", password):
+        return False, "La contraseña debe tener al menos una letra minúscula"
+    
+    if not re.search(r"[0-9]", password):
+        return False, "La contraseña debe tener al menos un número"
+    
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+        return False, "La contraseña debe tener al menos un carácter especial (!@#$%^&* etc.)"
+    
+    return True, "Contraseña válida"
+
+def validar_email_unico_y_valido(email):
+    """
+    Valida que el email sea único y tenga formato válido
+    """
+    try:
+        validate_email(email)
+    except ValidationError:
+        return False, "El formato del email no es válido"
+    
+    if User.objects.filter(email=email).exists():
+        return False, "El correo electrónico ya está registrado"
+    
+    return True, "Email válido"
+
+# ------------------------------
+# VISTAS NORMALES (Django Template)
 # ------------------------------
 
 def login_view(request):
@@ -29,9 +89,9 @@ def login_view(request):
         if user:
             user = User.objects.get(pk=user.pk)
             login(request, user)
-            print(f"[DEBUG] Usuario: {user.username} | is_superuser: {user.is_superuser} | is_staff: {user.is_staff}")
+            print(f"[DEBUG] Usuario autenticado correctamente: {user.username}")
             if user.is_superuser:
-                return redirect("admin_dashboard")
+                return redirect("/admin/")
             elif user.is_staff:
                 return redirect("dashboard_profesor")
             else:
@@ -39,7 +99,6 @@ def login_view(request):
         else:
             messages.error(request, "Usuario o contraseña incorrectos")
     return render(request, "login.html")
-
 
 def register_view(request):
     if request.method == "POST":
@@ -50,22 +109,22 @@ def register_view(request):
         rol = request.POST.get("rol")
         nombre = request.POST.get("nombre")
         apellido = request.POST.get("apellido")
-        institucion = request.POST.get("institucion", "").strip()  # ← aseguramos valor
+        institucion = request.POST.get("institucion", "").strip()
 
-        # 🔹 Validaciones básicas
+        # Validaciones básicas
         if password1 != password2:
             messages.error(request, "Las contraseñas no coinciden")
             return redirect("register")
 
         if rol not in ["estudiante", "profesor"]:
-            messages.error(request, "No puedes registrar un administrador")
+            messages.error(request, "Rol no válido")
             return redirect("register")
 
         if User.objects.filter(username=username).exists():
             messages.error(request, "El usuario ya existe")
             return redirect("register")
 
-        # 🔹 Crear usuario
+        # Crear usuario
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -76,16 +135,16 @@ def register_view(request):
             is_staff=(rol == "profesor")
         )
 
-        # 🔹 Crear perfil asociado con institución
-        perfil = PerfilUsuario.objects.create(
+        # Crear perfil
+        PerfilUsuario.objects.create(
             user=user,
             institucion=institucion if institucion else None
         )
 
-        # 🔹 Iniciar sesión automáticamente
+        # Iniciar sesión automáticamente
         login(request, user)
 
-        # 🔹 Redirección según rol
+        # Redirección según rol
         if rol == "profesor":
             messages.success(request, f"✅ Bienvenido profesor {nombre} {apellido}")
             return redirect("dashboard_profesor")
@@ -95,21 +154,21 @@ def register_view(request):
 
     return render(request, "register.html")
 
-
 def logout_view(request):
     logout(request)
     return redirect("login")
 
+def privacy_policy_view(request):
+    return render(request, "privacy.html")
 
 # ------------------------------
 # VISTAS API (DRF + JWT)
 # ------------------------------
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def api_login(request):
-    """
-    Login vía API, devuelve access y refresh JWT.
-    """
+    """Login vía API, devuelve access y refresh JWT."""
     username = request.data.get("username")
     password = request.data.get("password")
     user = authenticate(request, username=username, password=password)
@@ -122,51 +181,47 @@ def api_login(request):
         })
     return Response({'error': 'Usuario o contraseña incorrectos'}, status=400)
 
-
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def api_register(request):
-    """
-    Registro vía API, devuelve JWT.
-    """
-    username = request.data.get("username")
-    email = request.data.get("email")
-    password1 = request.data.get("password1")
-    password2 = request.data.get("password2")
-    rol = request.data.get("rol")
-    nombre = request.data.get("nombre")
-    apellido = request.data.get("apellido")
+    """Registro vía API seguro con JWT usando serializer."""
+    serializer = RegisterSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save()
 
-    if password1 != password2:
-        return Response({'error': 'Las contraseñas no coinciden'}, status=400)
+        # Asignar rol si viene en la data
+        rol = request.data.get("rol", "").lower()
+        if rol == "profesor":
+            user.is_staff = True
+            user.save()
+        else:
+            user.is_staff = False
 
-    if User.objects.filter(username=username).exists():
-        return Response({'error': 'El usuario ya existe'}, status=400)
+        # Generar tokens JWT
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'message': 'Usuario registrado exitosamente.',
+            'username': user.username,
+            'email': user.email,
+            'rol': rol if rol in ["profesor", "estudiante"] else "estudiante",
+            'refresh': str(refresh),
+            'access': str(refresh.access_token)
+        }, status=status.HTTP_201_CREATED)
 
-    user = User.objects.create_user(
-        username=username,
-        email=email,
-        password=password1,
-        first_name=nombre,
-        last_name=apellido
-    )
-
-    if rol == "profesor":
-        user.is_staff = True
-        user.save()
-
-    refresh = RefreshToken.for_user(user)
-    return Response({
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-        'rol': rol
-    }, status=201)
-
-
-# 🔹 NUEVOS endpoints con sesión Django
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def api_register_session(request):
+    """Registro vía API con sesión Django y reCAPTCHA"""
     data = request.data
+    
+    # ✅ Validar reCAPTCHA primero
+    recaptcha_token = data.get("g-recaptcha-response")
+    if not recaptcha_token or not validar_recaptcha(recaptcha_token):
+        return Response({'error': 'Captcha inválido. Por favor intenta de nuevo.'}, status=400)
+    
+    # Validaciones básicas
     username = data.get("username", "").strip()
     email = data.get("email", "").strip()
     password1 = data.get("password1", "").strip()
@@ -177,7 +232,6 @@ def api_register_session(request):
     institucion = data.get("institucion", "").strip()
     semestre = data.get("semestre", "").strip() if rol == "estudiante" else None
 
-    #  Validaciones básicas
     if not username or not email or not password1 or not password2 or not nombre_completo:
         return Response({'error': 'Por favor completa todos los campos obligatorios.'}, status=400)
 
@@ -190,61 +244,85 @@ def api_register_session(request):
     if User.objects.filter(username=username).exists():
         return Response({'error': 'El usuario ya existe.'}, status=400)
 
-    if User.objects.filter(email=email).exists():
-        return Response({'error': 'El correo electrónico ya está registrado.'}, status=400)
+    # ✅ Validación de email mejorada
+    email_valido, mensaje_email = validar_email_unico_y_valido(email)
+    if not email_valido:
+        return Response({'error': mensaje_email}, status=400)
 
-    # Dividir nombre completo en nombre y apellido
+    # ✅ Validación de contraseña segura
+    es_segura, mensaje_error = validar_password_segura(password1)
+    if not es_segura:
+        return Response({'error': mensaje_error}, status=400)
+
+    # Dividir nombre completo
     partes = nombre_completo.split(" ", 1)
     first_name = partes[0] if partes else ""
     last_name = partes[1] if len(partes) > 1 else ""
 
-    # Crear usuario
-    user = User.objects.create_user(
-        username=username,
-        email=email,
-        password=password1,
-        first_name=first_name,
-        last_name=last_name
-    )
+    try:
+        # Crear usuario
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password1,
+            first_name=first_name,
+            last_name=last_name,
+            is_staff=(rol == "profesor"),
+            is_superuser=False
+        )
 
-        # ✅ Crear el perfil automáticamente
-    PerfilUsuario.objects.create(
-        user=user,
-        institucion=institucion,
-        foto_perfil="img/default_user.png"  # si no sube una
-    )
+        # Crear perfil
+        PerfilUsuario.objects.create(
+            user=user,
+            institucion=institucion,
+            foto_perfil="img/default_user.png"
+        )
 
-    # Asignar roles según tipo
-    if rol == "profesor":
-        user.is_staff = True
-    else:
-        user.is_staff = False
-    user.is_superuser = False
-    user.save()
-
-    # Autenticación y tokens
-    login(request, user)
-    refresh = RefreshToken.for_user(user)
-
-    return Response({
-        'message': 'Usuario registrado exitosamente.',
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-        'rol': rol,
-        'usuario': username
-    }, status=201)
-
-@api_view(['POST'])
-def api_login_session(request):
-    username = request.data.get("username")
-    password = request.data.get("password")
-    user = authenticate(request, username=username, password=password)
-
-    if user:
+        # ✅ SOLUCIÓN: Especificar el backend manualmente antes del login
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
+        
+        # Autenticación y tokens
         login(request, user)
         refresh = RefreshToken.for_user(user)
 
-        # Determinar rol correctamente
+        return Response({
+            'message': 'Usuario registrado exitosamente.',
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'rol': rol,
+            'usuario': username
+        }, status=201)
+
+    except Exception as e:
+        return Response({'error': f'Error al crear el usuario: {str(e)}'}, status=500)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def api_login_session(request):
+    """Login vía API con sesión Django - VERSIÓN SIMPLE Y FUNCIONAL"""
+    username = request.data.get("username", "").strip()
+    password = request.data.get("password", "").strip()
+
+    # Validaciones básicas
+    if not username or not password:
+        return Response({
+            'error': 'Por favor ingresa usuario y contraseña'
+        }, status=400)
+
+    # Autenticar
+    user = authenticate(
+        request, 
+        username=username, 
+        password=password,
+        backend='django.contrib.auth.backends.ModelBackend'
+    )
+
+    if user:
+        # ✅ Login exitoso
+        login(request, user)
+        refresh = RefreshToken.for_user(user)
+
+        # Determinar rol
         if user.is_superuser:
             rol = "admin"
         elif user.is_staff:
@@ -255,28 +333,40 @@ def api_login_session(request):
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token),
-            'rol': rol
+            'rol': rol,
+            'username': user.username,
+            'nombre_completo': f"{user.first_name} {user.last_name}",
+            'message': 'Login exitoso'
         })
 
-    return Response({'error': 'Usuario o contraseña incorrectos'}, status=400)
+    else:
+        # ✅ Login fallido
+        return Response({
+            'error': 'Usuario o contraseña incorrectos'
+        }, status=400)
 
-def privacy_policy_view(request):
-    return render(request, "privacy.html")  # crea un archivo privacy.html
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def verificar_intentos(request, username):
+    """Endpoint para verificar intentos de un usuario"""
+    from .utils import obtener_estado_intentos
+    
+    info = obtener_estado_intentos(username)
+    return Response(info)
 
 # ------------------------------
-# Fin de auth_app/views.py 
-from django.contrib.auth.decorators import login_required
+# VISTAS DE DASHBOARD
+# ------------------------------
 
 @login_required
 def dashboard(request):
     user = request.user
     if user.is_superuser:
-        return redirect('admin_dashboard')
+        return redirect('/admin/')
     elif user.is_staff:
         return redirect('dashboard_profesor')
     else:
         return redirect('dashboard_user')
-
 
 @login_required
 def estudiante_dashboard(request):
@@ -287,7 +377,6 @@ def estudiante_dashboard(request):
         ]
     }
     return render(request, "dashboard_user.html", context)
-
 
 @login_required
 def profesor_dashboard(request):
@@ -304,10 +393,9 @@ def profesor_dashboard(request):
     }
     return render(request, "profesor_dashboard.html", context)
 
-
-@login_required
-def admin_dashboard(request):
-    return render(request, "admin_dashboard.html")
+# ------------------------------
+# VISTAS DE CONFIGURACIÓN
+# ------------------------------
 
 @login_required
 def configuracion_view(request):
@@ -321,12 +409,11 @@ class EditarPerfilForm(forms.ModelForm):
 
     class Meta:
         model = PerfilUsuario
-        fields = ['foto_perfil']  # 👈 Solo este campo viene del modelo PerfilUsuario
+        fields = ['foto_perfil']
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')
         super().__init__(*args, **kwargs)
-        # Inicializa con los datos del usuario
         self.fields['username'].initial = user.username
         self.fields['first_name'].initial = user.first_name
         self.fields['last_name'].initial = user.last_name
@@ -334,14 +421,12 @@ class EditarPerfilForm(forms.ModelForm):
     def save(self, commit=True):
         perfil = super().save(commit=False)
         user = perfil.user
-        # Actualiza los datos del modelo User
         user.first_name = self.cleaned_data.get('first_name')
         user.last_name = self.cleaned_data.get('last_name')
         if commit:
             user.save()
             perfil.save()
         return perfil
-
 
 @login_required
 def editar_perfil_view(request):
@@ -351,23 +436,20 @@ def editar_perfil_view(request):
         if form.is_valid():
             form.save()
             messages.success(request, "✅ Perfil actualizado correctamente.")
-
-            # 🔹 Redirección según el tipo de usuario
             if request.user.is_superuser:
-                return redirect('admin_dashboard')
+                return redirect('/admin/')
             elif request.user.is_staff:
-                return redirect('configuracion_profesor')  # 🔹 profesor
+                return redirect('configuracion_profesor')
             else:
-                return redirect('configuracion')  # 🔹 estudiante
+                return redirect('configuracion')
     else:
         form = EditarPerfilForm(instance=perfil, user=request.user)
 
     return render(request, "editar_perfil.html", {"form": form})
 
-
 @login_required
 def eliminar_cuenta(request):
-    """Elimina la cuenta del usuario logueado y muestra la pantalla de confirmación."""
+    """Elimina la cuenta del usuario logueado"""
     user = request.user
     logout(request)
     user.delete()
@@ -375,7 +457,7 @@ def eliminar_cuenta(request):
 
 @login_required
 def configuracion_profesor_view(request):
-    messages.get_messages(request).used = True  # limpia mensajes previos
+    messages.get_messages(request).used = True
     perfil, _ = PerfilUsuario.objects.get_or_create(user=request.user)
 
     if not request.user.is_staff:
@@ -390,10 +472,81 @@ class CustomPasswordChangeView(PasswordChangeView):
 
     def get_success_url(self):
         user = self.request.user
-        # 🔹 Redirección según el tipo de usuario
         if user.is_superuser:
             return reverse_lazy('admin_dashboard')
         elif user.is_staff:
             return reverse_lazy('configuracion_profesor')
         else:
             return reverse_lazy('configuracion')
+
+# ------------------------------
+# VISTAS DE ADMINISTRADOR
+# ------------------------------
+
+@login_required
+def admin_dashboard(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Acceso restringido al administrador.")
+        return redirect("dashboard_user")
+    return redirect("/admin/")
+
+@login_required
+def admin_cursos(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Acceso restringido al administrador.")
+        return redirect("dashboard_user")
+
+    try:
+        from resources.models import Material
+        cursos = Material.objects.all()
+    except ImportError:
+        cursos = []
+
+    context = {"cursos": cursos}
+    return render(request, "admin_cursos.html", context)
+
+@login_required
+def admin_usuarios(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Acceso restringido al administrador.")
+        return redirect("dashboard_user")
+
+    usuarios = []
+    for user in User.objects.all():
+        if user.is_superuser:
+            rol = "Administrador"
+        elif user.is_staff:
+            rol = "Profesor"
+        else:
+            rol = "Estudiante"
+        perfil = getattr(user, "perfilusuario", None)
+        institucion = perfil.institucion if perfil else "—"
+        usuarios.append({
+            "id": user.id,
+            "username": user.username,
+            "nombre": f"{user.first_name} {user.last_name}",
+            "email": user.email,
+            "rol": rol,
+            "institucion": institucion,
+            "activo": user.is_active
+        })
+
+    context = {"usuarios": usuarios, "total_usuarios": len(usuarios)}
+    return render(request, "admin_usuarios.html", context)
+
+@login_required
+def admin_estadisticas(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Acceso restringido al administrador.")
+        return redirect("dashboard_user")
+
+    total_usuarios = User.objects.count()
+    total_profesores = User.objects.filter(is_staff=True).count()
+    total_estudiantes = User.objects.filter(is_staff=False, is_superuser=False).count()
+
+    context = {
+        "total_usuarios": total_usuarios,
+        "total_profesores": total_profesores,
+        "total_estudiantes": total_estudiantes
+    }
+    return render(request, "admin_estadisticas.html", context)
