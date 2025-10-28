@@ -143,6 +143,7 @@ def register_view(request):
             user=user,
             institucion=institucion if institucion else None
         )
+        )
 
         # Iniciar sesión automáticamente
         login(request, user)
