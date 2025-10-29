@@ -115,7 +115,7 @@
             {% endif %}
           </td>
           <td>
-            <a href="{% url 'quitar_material_evaluacion' evaluacion.id m.id %}" 
+            <a href="{% url 'dashboard:quitar_material_evaluacion' evaluacion.id m.id %}" 
               class="btn btn-danger btn-sm"
               onclick="return confirm('¿Seguro que deseas quitar este material de la evaluación?');">
               ❌ Quitar
@@ -147,7 +147,7 @@
     </form>
 
     <div class="text-center mt-4">
-      <a href="{% url 'profesor_evaluaciones' %}" class="btn btn-secondary">← Volver</a>
+      <a href="{% url 'dashboard:profesor_evaluaciones' %}" class="btn btn-secondary">← Volver</a>
     </div>
   </div>
 

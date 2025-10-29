@@ -18,14 +18,22 @@ class ForoForm(forms.ModelForm):
 
 
 class ComentarioForm(forms.ModelForm):
-    class Meta:
-        model = Comentario
-        fields = ["texto", "archivo"]  # 👈 añadimos archivo
-        widgets = {
-            "texto": forms.Textarea(attrs={"class": "form-control", "rows": 3, "placeholder": "Escribe tu comentario"}),
-        }
-
+    # Campo opcional para subir archivo
     archivo = forms.FileField(
         required=False,
-        widget=forms.ClearableFileInput(attrs={"class": "form-control"})
+        widget=forms.ClearableFileInput(attrs={
+            "class": "form-control",
+            "accept": ".pdf,.jpg,.png,.jpeg,.docx,.xlsx,.txt"
+        })
     )
+
+    class Meta:
+        model = Comentario
+        fields = ["texto", "archivo"]
+        widgets = {
+            "texto": forms.Textarea(attrs={
+                "class": "form-control",
+                "rows": 3,
+                "placeholder": "Escribe tu comentario..."
+            }),
+        }

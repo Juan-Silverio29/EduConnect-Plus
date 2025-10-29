@@ -192,10 +192,7 @@ def profesor_material(request):
     else:
         form = MaterialForm()
 
-    return render(request, 'profesor_material.html', {'materiales': materiales, 'form': form})
-
-
-    # 🔹 Enviar cursos al template
+    # 🔹 Enviar cursos al template (único return)
     return render(request, 'profesor_material.html', {
         'form': form,
         'materiales': materiales,
@@ -370,7 +367,7 @@ def editar_curso(request, curso_id):
         if form.is_valid():
             form.save()
             messages.success(request, "✅ El curso se actualizó correctamente.")
-            return redirect("profesor_cursos")
+            return redirect("dashboard:profesor_cursos")
     else:
         form = CursoForm(instance=curso)
 
@@ -409,8 +406,10 @@ def profesor_evaluaciones(request):
 
 
 # ➕ Crear evaluación
+# ➕ Crear evaluación
 @login_required
 def crear_evaluacion(request):
+    # 🔹 Obtener solo los cursos del profesor actual
     cursos = Curso.objects.filter(profesor=request.user)
 
     if request.method == 'POST':
@@ -420,27 +419,35 @@ def crear_evaluacion(request):
             evaluacion.profesor = request.user
             evaluacion.save()
             messages.success(request, "✅ Evaluación creada correctamente.")
-            return redirect('profesor_evaluaciones')
+            return redirect('dashboard:profesor_evaluaciones')
     else:
         form = EvaluacionForm()
 
+    # 🔹 Limitar el campo 'curso' a los cursos del profesor logueado
+    form.fields['curso'].queryset = cursos
+
+    # 🔹 Enviar cursos (por si se usan en el template)
     return render(request, 'crear_evaluacion.html', {'form': form, 'cursos': cursos})
+
 
 
 # ✏️ Editar evaluación
 @login_required
 def editar_evaluacion(request, evaluacion_id):
     evaluacion = get_object_or_404(Evaluacion, id=evaluacion_id, profesor=request.user)
+    cursos = Curso.objects.filter(profesor=request.user)
+
     if request.method == 'POST':
         form = EvaluacionForm(request.POST, instance=evaluacion)
         if form.is_valid():
             form.save()
-            messages.success(request, "✏️ Evaluación actualizada correctamente.")
-            return redirect('profesor_evaluaciones')
+            messages.success(request, "✅ Evaluación actualizada correctamente.")
+            return redirect('dashboard:profesor_evaluaciones')
     else:
         form = EvaluacionForm(instance=evaluacion)
 
-    return render(request, 'editar_evaluacion.html', {'form': form})
+    form.fields['curso'].queryset = cursos
+    return render(request, 'editar_evaluacion.html', {'form': form, 'evaluacion': evaluacion})
 
 
 # 🗑️ Eliminar evaluación
@@ -449,7 +456,7 @@ def eliminar_evaluacion(request, evaluacion_id):
     evaluacion = get_object_or_404(Evaluacion, id=evaluacion_id, profesor=request.user)
     evaluacion.delete()
     messages.success(request, "🗑️ Evaluación eliminada correctamente.")
-    return redirect('profesor_evaluaciones')
+    return redirect('dashboard:profesor_evaluaciones')
 
 @login_required
 def detalle_evaluacion(request, evaluacion_id):
@@ -475,7 +482,7 @@ def detalle_evaluacion(request, evaluacion_id):
                 messages.success(request, f"📘 El material '{material.titulo}' se agregó a la evaluación correctamente.")
             except MaterialDidactico.DoesNotExist:
                 messages.error(request, "❌ El material seleccionado no existe o no pertenece a este curso.")
-        return redirect("detalle_evaluacion", evaluacion_id=evaluacion.id)
+        return redirect("dashboard:detalle_evaluacion", evaluacion_id=evaluacion.id)
 
     context = {
         "evaluacion": evaluacion,

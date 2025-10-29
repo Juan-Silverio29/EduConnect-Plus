@@ -37,7 +37,7 @@
       {% csrf_token %}
       {{ form.as_p }}
       <div class="d-flex justify-content-between mt-4">
-        <a href="{% url 'profesor_cursos' %}" class="btn-back">⬅ Volver</a>
+        <a href="{% url 'dashboard:profesor_cursos' %}" class="btn-back">⬅ Volver</a>
         <button type="submit" class="btn btn-success">💾 Guardar cambios</button>
       </div>
     </form>

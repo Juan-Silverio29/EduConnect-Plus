@@ -16,8 +16,10 @@ class Foro(models.Model):
 class Comentario(models.Model):
     foro = models.ForeignKey(Foro, related_name="comentarios", on_delete=models.CASCADE)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
-    texto = models.TextField()  
+    texto = models.TextField()
+    archivo = models.FileField(upload_to="comentarios_archivos/", null=True, blank=True)  # ✅ nuevo campo
     fecha = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Comentario de {self.autor.username} en {self.foro.titulo}"
+

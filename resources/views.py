@@ -4,29 +4,62 @@ from .forms import RecursoForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from dashboard.models import Curso, MaterialDidactico, Inscripcion
+from .models import EntregaAlumno  
+from .forms import EntregaAlumnoForm
+import os  
 
 # 📌 Lista de recursos (solo los del usuario, admin ve todos)
 @login_required
 def lista_recursos(request):
     """
-    Muestra los materiales de los cursos donde el alumno está inscrito.
+    Muestra los materiales del curso y permite al alumno subir entregas.
     """
-    # Obtener los cursos donde el usuario (alumno) está inscrito
     cursos_inscritos = Curso.objects.filter(inscritos__alumno=request.user)
-
-    # Filtrar materiales solo de esos cursos
     materiales = MaterialDidactico.objects.filter(curso__in=cursos_inscritos).order_by('-fecha_subida')
 
-    # Filtro opcional por curso desde el formulario select
+    # Filtrar por curso si se selecciona en un select (opcional)
     curso_id = request.GET.get("curso")
     if curso_id:
         materiales = materiales.filter(curso_id=curso_id)
 
-    context = {
+    # 🧩 Manejar subida de entrega
+    if request.method == 'POST':
+        form = EntregaAlumnoForm(request.POST, request.FILES)
+        if form.is_valid():
+            entrega = form.save(commit=False)
+            entrega.alumno = request.user
+
+            # 🔹 Detectar tipo automáticamente
+            archivo = entrega.archivo
+            if archivo:
+                ext = os.path.splitext(archivo.name)[1].lower()
+                if ext in ['.pdf']:
+                    entrega.tipo = 'PDF'
+                elif ext in ['.ppt', '.pptx']:
+                    entrega.tipo = 'Presentación'
+                elif ext in ['.mp4', '.mov', '.avi']:
+                    entrega.tipo = 'Video'
+                elif ext in ['.jpg', '.jpeg', '.png']:
+                    entrega.tipo = 'Imagen'
+                elif ext in ['.doc', '.docx']:
+                    entrega.tipo = 'Documento'
+                else:
+                    entrega.tipo = 'Otro'
+
+            entrega.save()
+            messages.success(request, "✅ Archivo subido correctamente.")
+            return redirect('lista_recursos')  # Ajusta el nombre según tus urls
+    else:
+        form = EntregaAlumnoForm()
+
+    entregas = EntregaAlumno.objects.filter(alumno=request.user).order_by('-fecha_subida')
+
+    return render(request, "lista_recursos.html", {
         "materiales": materiales,
-        "cursos_inscritos": cursos_inscritos
-    }
-    return render(request, "lista_recursos.html", context)
+        "form": form,
+        "entregas": entregas,
+        "cursos_inscritos": cursos_inscritos,
+    })
 
 @login_required
 def lista_cursos(request):
@@ -57,6 +90,19 @@ def inscribirse_curso(request, curso_id):
 
     return redirect("lista_cursos")
 
+@login_required
+def darse_baja_curso(request, curso_id):
+    """
+    Permite al alumno darse de baja del curso.
+    """
+    inscripcion = Inscripcion.objects.filter(curso_id=curso_id, alumno=request.user).first()
+    if inscripcion:
+        inscripcion.delete()
+        messages.success(request, "❌ Te has dado de baja correctamente del curso.")
+    else:
+        messages.warning(request, "⚠️ No estabas inscrito en este curso.")
+
+    return redirect('lista_cursos')
 
 # 📍 Subir recurso nuevo
 @login_required
@@ -130,3 +176,21 @@ def logros_recursos_completados(request):
         "progreso": progreso,
         "progreso_class": progreso_class
     })
+
+@login_required
+def eliminar_entrega(request, entrega_id):
+    try:
+        entrega = get_object_or_404(EntregaAlumno, id=entrega_id, alumno=request.user)
+        # 🔹 Si tiene archivo físico, también lo borramos
+        if entrega.archivo and entrega.archivo.path:
+            import os
+            if os.path.exists(entrega.archivo.path):
+                os.remove(entrega.archivo.path)
+
+        entrega.delete()
+        messages.success(request, "🗑️ Entrega eliminada correctamente.")
+    except Exception as e:
+        messages.error(request, f"⚠️ No se pudo eliminar la entrega: {e}")
+
+    return redirect('resources:lista_recursos')
+

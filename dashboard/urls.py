@@ -1,6 +1,7 @@
 # dashboard/urls.py
 from django.urls import path
 from . import views
+app_name = 'dashboard' 
 
 urlpatterns = [
     # Dashboards principales
@@ -30,9 +31,10 @@ urlpatterns = [
     path('profesor/evaluaciones/editar/<int:evaluacion_id>/', views.editar_evaluacion, name='editar_evaluacion'),
     path('profesor/evaluaciones/eliminar/<int:evaluacion_id>/', views.eliminar_evaluacion, name='eliminar_evaluacion'),
     path('profesor/evaluaciones/detalle/<int:evaluacion_id>/', views.detalle_evaluacion, name='detalle_evaluacion'),
-    path("dashboard/profesor/evaluaciones/<int:evaluacion_id>/quitar/<int:material_id>/", 
+    path("profesor/evaluaciones/<int:evaluacion_id>/quitar/<int:material_id>/", 
         views.quitar_material_evaluacion, 
         name="quitar_material_evaluacion"),
+
 
 
     # Admin

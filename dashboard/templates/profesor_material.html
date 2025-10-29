@@ -209,11 +209,11 @@
               {% endif %}
             </td>
 
-            <td>{{ material.fecha|date:"d/m/Y H:i" }}</td>
+            <td>{{ material.fecha_subida|date:"d/m/Y H:i" }}</td>
 
             <td>
-              <a href="{% url 'editar_material' material.id %}" class="btn btn-warning btn-sm">✏️ Editar</a>
-              <a href="{% url 'eliminar_material' material.id %}" class="btn btn-danger btn-sm">🗑️ Eliminar</a>
+              <a href="{% url 'dashboard:editar_material' material.id %}" class="btn btn-warning btn-sm">✏️ Editar</a>
+              <a href="{% url 'dashboard:eliminar_material' material.id %}" class="btn btn-danger btn-sm">🗑️ Eliminar</a>
 
               {% if not material.curso %}
                 <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#asignarModal{{ material.id }}">
@@ -236,7 +236,7 @@
                 <h5 class="modal-title">📘 Asignar curso a "{{ material.titulo }}"</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
               </div>
-              <form method="post" action="{% url 'asignar_material_a_curso' material.id %}">
+              <form method="post" action="{% url 'dashboard:asignar_material_a_curso' material.id %}">
                 {% csrf_token %}
                 <div class="modal-body">
                   <label class="form-label">Selecciona un curso:</label>

@@ -57,7 +57,7 @@ def foro_detalle(request, foro_id):
     comentarios = foro.comentarios.all().order_by("-fecha")
 
     if request.method == "POST":
-        form = ComentarioForm(request.POST)
+        form = ComentarioForm(request.POST, request.FILES)  # ✅ importante
         if form.is_valid():
             comentario = form.save(commit=False)
             comentario.foro = foro
