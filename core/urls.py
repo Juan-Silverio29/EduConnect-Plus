@@ -25,13 +25,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('landing.urls')),         # Página principal
     path('auth/', include('auth_app.urls')),   # Login y Registro
-    path('dashboard/', include(('dashboard.urls', 'dashboard'), namespace='dashboard')),  # <-- namespace
+    path('dashboard/', include(('dashboard.urls', 'dashboard'), namespace='dashboard')),  # namespace único
     path("resources/", include("resources.urls")),
     path("forum/", include("forum.urls")),
-    #path('api/auth/', include('auth_app.api_urls')),
     path('api/', include('auth_app.api_urls')),
-    #path('auth/', include('auth_app.urls')),
-
 
 ]
 

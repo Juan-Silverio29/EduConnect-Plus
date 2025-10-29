@@ -60,6 +60,121 @@
 
     .table thead th { background-color: #0d1b2a; color: white; }
     .table tbody tr:hover { background-color: #e9f2ff; }
+
+    /* Estilos para el chat AI flotante */
+    #edu-ai-chat {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 1050;
+    }
+
+    #edu-ai-toggle {
+        border-radius: 50%;
+        width: 56px;
+        height: 56px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    #edu-ai-panel {
+        display: none;
+        width: 384px;
+        height: 512px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        overflow: hidden;
+        flex-direction: column;
+        margin-bottom: 16px;
+    }
+
+    #edu-ai-panel.show {
+        display: flex !important;
+    }
+
+    #edu-ai-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+    }
+
+    .message {
+        margin-bottom: 12px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        max-width: 80%;
+    }
+
+    .user-message {
+        background: #3b82f6;
+        color: white;
+        margin-left: auto;
+    }
+
+    .ai-message {
+        background: #f1f5f9;
+        color: #334155;
+    }
+
+    #edu-ai-close {
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        color: #64748b;
+    }
+
+    #edu-ai-input {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 8px 12px;
+    }
+
+    /* Estilos para el chat IA integrado */
+    #chat-ia {
+        position: fixed;
+        bottom: 100px;
+        right: 24px;
+        width: 320px;
+        background: white;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid #e2e8f0;
+        z-index: 1049;
+    }
+
+    #chat-messages {
+        height: 240px;
+        overflow-y: auto;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
+        font-size: 0.875rem;
+        background: #f8fafc;
+    }
+
+    #chat-input {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 0.875rem;
+    }
+
+    .text-blue-600 {
+        color: #2563eb;
+    }
   </style>
 </head>
 <body>
@@ -133,24 +248,24 @@
       <h4 class="mt-4">Cursos Recientes</h4>
       <div class="row g-3 mt-2">
         {% for curso in cursos %}
-<div class="col-md-6">
-  <div class="card course-card">
-    <div class="card-body">
-      <h5>{{ curso.nombre }} {% if curso.grupo %}- Grupo {{ curso.grupo }}{% endif %}</h5>
-      <p>📘 {{ curso.categoria|default:"Sin categoría" }}</p>
-      
-      <!-- AGREGAR VALIDACIÓN PARA curso.id -->
-      {% if curso.id %}
-        <a href="{% url 'dashboard:detalle_curso' curso.id %}" class="btn btn-primary btn-sm mt-2">Ver Curso</a>
-      {% else %}
-        <span class="btn btn-secondary btn-sm mt-2" disabled>Curso no disponible</span>
-      {% endif %}
-    </div>
-  </div>
-</div>
-{% empty %}
-<p>No tienes cursos asignados.</p>
-{% endfor %}
+        <div class="col-md-6">
+          <div class="card course-card">
+            <div class="card-body">
+              <h5>{{ curso.nombre }} {% if curso.grupo %}- Grupo {{ curso.grupo }}{% endif %}</h5>
+              <p>📘 {{ curso.categoria|default:"Sin categoría" }}</p>
+              
+              <!-- AGREGAR VALIDACIÓN PARA curso.id -->
+              {% if curso.id %}
+                <a href="{% url 'dashboard:detalle_curso' curso.id %}" class="btn btn-primary btn-sm mt-2">Ver Curso</a>
+              {% else %}
+                <span class="btn btn-secondary btn-sm mt-2" disabled>Curso no disponible</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <p>No tienes cursos asignados.</p>
+        {% endfor %}
       </div>
 
       <!-- Evaluaciones -->
@@ -178,10 +293,144 @@
     </div>
   </div>
 
+  <!-- Chat AI Tutor Flotante -->
+  <div id="edu-ai-chat">
+    <div id="edu-ai-panel">
+      <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+        <strong>EduConnect AI Tutor</strong>
+        <button id="edu-ai-close" class="btn btn-sm">✕</button>
+      </div>
+      <div id="edu-ai-messages">
+        <div class="message ai-message">
+          ¡Hola profesor! Soy su asistente AI. ¿En qué puedo ayudarle con la gestión de sus cursos?
+        </div>
+      </div>
+      <div class="p-3 border-top">
+        <form id="edu-ai-form">
+          <input id="edu-ai-input" type="text" class="form-control" placeholder="Escriba su pregunta sobre gestión docente...">
+        </form>
+      </div>
+    </div>
+    <button id="edu-ai-toggle">🤖</button>
+  </div>
+
+  <!-- Chat IA Integrado (si pertenece a grupos Profesor/Alumno) -->
+  {% if user.groups.filter.name__in=['Profesor', 'Alumno'].exists or user.is_staff %}
+  <div id="chat-ia">
+    <h3 class="font-semibold text-lg mb-2">🤖 Asistente IA</h3>
+    <div id="chat-messages">
+      <div class="text-blue-600"><b>IA:</b> ¡Hola profesor! ¿En qué puedo ayudarte hoy?</div>
+    </div>
+    <input id="chat-input" class="w-full border rounded p-2 text-sm" placeholder="Escribe tu pregunta...">
+  </div>
+  {% endif %}
+
   <footer class="footer mt-4 text-center">
     <p>&copy; 2025 EduConnect+. Todos los derechos reservados.</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Funcionalidad del chat AI flotante para profesores
+    document.addEventListener('DOMContentLoaded', function() {
+      const toggleBtn = document.getElementById('edu-ai-toggle');
+      const closeBtn = document.getElementById('edu-ai-close');
+      const chatPanel = document.getElementById('edu-ai-panel');
+      const chatForm = document.getElementById('edu-ai-form');
+      const chatInput = document.getElementById('edu-ai-input');
+      const chatMessages = document.getElementById('edu-ai-messages');
+
+      // Toggle del chat flotante
+      toggleBtn.addEventListener('click', function() {
+        chatPanel.classList.toggle('show');
+      });
+
+      // Cerrar chat flotante
+      closeBtn.addEventListener('click', function() {
+        chatPanel.classList.remove('show');
+      });
+
+      // Enviar mensaje al chat flotante
+      chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const message = chatInput.value.trim();
+        
+        if (message) {
+          // Agregar mensaje del profesor
+          addMessage(message, 'user');
+          chatInput.value = '';
+          
+          // Simular respuesta del AI para profesores
+          setTimeout(() => {
+            const responses = [
+              "Para crear un nuevo curso, vaya a la sección 'Mis Cursos' y haga clic en 'Crear Curso'.",
+              "Puede gestionar las evaluaciones desde el menú 'Evaluaciones' donde podrá crear, editar y calificar.",
+              "Para subir material didáctico, use la opción 'Material Didáctico' en el sidebar.",
+              "¿Necesita ayuda con la configuración de su perfil de profesor? Puedo guiarle paso a paso.",
+              "Para gestionar los foros académicos, acceda a 'Foro Académico' donde podrá moderar las discusiones."
+            ];
+            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+            addMessage(randomResponse, 'ai');
+          }, 1000);
+        }
+      });
+
+      function addMessage(text, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        messageDiv.textContent = text;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      // Funcionalidad del chat IA integrado
+      const chatInputIntegrated = document.getElementById('chat-input');
+      const chatMessagesIntegrated = document.getElementById('chat-messages');
+
+      if (chatInputIntegrated && chatMessagesIntegrated) {
+        chatInputIntegrated.addEventListener('keypress', async (e) => {
+          if (e.key === 'Enter' && chatInputIntegrated.value.trim()) {
+            const userMsg = chatInputIntegrated.value;
+            chatMessagesIntegrated.innerHTML += `<div><b>Tú:</b> ${userMsg}</div>`;
+            chatInputIntegrated.value = '';
+            
+            // Simular respuesta de la IA (puedes reemplazar con llamada real a la API)
+            setTimeout(() => {
+              const responses = [
+                "Entiendo tu consulta. Te recomiendo revisar la documentación del curso.",
+                "Para eso necesitas acceder a la configuración avanzada del panel de profesor.",
+                "Puedo ayudarte a optimizar la gestión de tus materiales didácticos.",
+                "Esa funcionalidad está disponible en la versión premium de EduConnect+."
+              ];
+              const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+              chatMessagesIntegrated.innerHTML += `<div class="text-blue-600"><b>IA:</b> ${randomResponse}</div>`;
+              chatMessagesIntegrated.scrollTop = chatMessagesIntegrated.scrollHeight;
+            }, 500);
+
+            // Para usar la API real, descomenta esto:
+            /*
+            try {
+              const res = await fetch('/dashboard/ai/chat/', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json', 
+                  'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ message: userMsg })
+              });
+              const data = await res.json();
+              chatMessagesIntegrated.innerHTML += `<div class="text-blue-600"><b>IA:</b> ${data.reply}</div>`;
+            } catch (error) {
+              chatMessagesIntegrated.innerHTML += `<div class="text-red-600"><b>IA:</b> Error de conexión</div>`;
+            }
+            */
+            
+            chatMessagesIntegrated.scrollTop = chatMessagesIntegrated.scrollHeight;
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>

@@ -9,6 +9,7 @@ class Recursos(models.Model):
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     fecha_completado = models.DateField(null=True, blank=True)
     completado = models.BooleanField(default=False)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.titulo

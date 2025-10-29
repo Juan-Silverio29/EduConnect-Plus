@@ -19,6 +19,8 @@ from .models import Evaluacion
 from django.db import models
 from .forms import CursoForm
 import os
+from django.http import JsonResponse
+from django.contrib.auth.models import User
 
 # ---------------------------
 # Redirección según el rol
@@ -506,3 +508,161 @@ def quitar_material_evaluacion(request, evaluacion_id, material_id):
         messages.error(request, "❌ El material no pertenece a esta evaluación.")
 
     return redirect("detalle_evaluacion", evaluacion_id=evaluacion.id)
+
+def ai_stats_api(request):
+    total_users = User.objects.count()
+    total_students = User.objects.filter(groups__name='Alumno').count()
+    total_teachers = User.objects.filter(groups__name='Profesor').count()
+    total_admins = User.objects.filter(is_staff=True).count()
+
+    data = {
+        'total_users': total_users,
+        'students': total_students,
+        'teachers': total_teachers,
+        'admins': total_admins
+    }
+    return JsonResponse(data)
+
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.shortcuts import render
+from django.contrib.auth.models import User
+
+@staff_member_required
+def admin_distribution_view(request):
+    total_users = User.objects.count()
+    students = User.objects.filter(groups__name='Alumno').count()
+    teachers = User.objects.filter(groups__name='Profesor').count()
+    admins = User.objects.filter(is_staff=True).count()
+
+    context = {
+        'total_users': total_users,
+        'students': students,
+        'teachers': teachers,
+        'admins': admins
+    }
+    return render(request, 'admin_dashboard.html', context)
+
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt
+def ai_chat_api(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_message = data.get('message', '').lower()
+        # Aquí puedes mejorar la lógica con IA real más adelante
+        if "hola" in user_message:
+            reply = "¡Hola! Soy tu asistente de EduConnect 🤖. ¿En qué puedo ayudarte hoy?"
+        elif "ayuda" in user_message:
+            reply = "Puedo ayudarte a entender tus tareas, revisar tus clases o mostrar estadísticas."
+        else:
+            reply = "No entendí bien eso 😅, ¿puedes reformularlo?"
+        return JsonResponse({'reply': reply})
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt
+def ai_recommendations_api(request):
+    """
+    API sencilla de recomendaciones IA.
+    Profesores y alumnos recibirán sugerencias personalizadas
+    según su tipo de usuario.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'No autenticado'}, status=401)
+
+    role = "Alumno"
+    if request.user.groups.filter(name="Profesor").exists():
+        role = "Profesor"
+    elif request.user.is_staff:
+        role = "Administrador"
+
+    # Ejemplo de recomendaciones simples
+    if role == "Profesor":
+        recommendations = [
+            "📚 Sube tus materiales didácticos actualizados.",
+            "🧠 Usa el chat IA para generar preguntas tipo examen.",
+            "📊 Revisa la participación de tus alumnos en clase."
+        ]
+    elif role == "Alumno":
+        recommendations = [
+            "🕒 No olvides revisar tus tareas pendientes.",
+            "🤖 Usa el chat IA para estudiar temas difíciles.",
+            "💡 Participa en los foros para subir tu calificación."
+        ]
+    else:
+        recommendations = [
+            "🧭 Administra usuarios desde el panel de control.",
+            "📈 Consulta la distribución de usuarios.",
+            "🧩 Supervisa las interacciones de IA."
+        ]
+
+    return JsonResponse({
+        'role': role,
+        'recommendations': recommendations
+    })
+
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.models import User
+from django.db.models import Count
+from django.shortcuts import render
+
+@user_passes_test(lambda u: u.is_staff)
+def admin_user_distribution(request):
+    """
+    Vista exclusiva para el administrador.
+    Muestra la distribución de usuarios (alumnos, profesores y admin)
+    mediante una gráfica Plotly.
+    """
+    # Obtener conteo por tipo de usuario
+    total_users = User.objects.count()
+    total_staff = User.objects.filter(is_staff=True).count()
+    total_professors = User.objects.filter(groups__name='Profesor').count()
+    total_students = total_users - total_staff - total_professors
+
+    # Datos para Plotly
+    data = {
+        "labels": ["Administradores", "Profesores", "Alumnos"],
+        "values": [total_staff, total_professors, total_students]
+    }
+
+    context = {
+        "data": data,
+        "total_users": total_users
+    }
+
+    return render(request, "user_distribution.html", context)
+
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.models import User
+import pandas as pd
+import plotly.express as px
+
+@user_passes_test(lambda u: u.is_superuser)
+def admin_distribution_view(request):
+    users = User.objects.all()
+    data = {
+        'Tipo': ['Superusuario' if u.is_superuser else 'Staff' if u.is_staff else 'Usuario' for u in users]
+    }
+
+    df = pd.DataFrame(data)
+    fig = px.pie(
+        df,
+        names='Tipo',
+        title='Distribución de Usuarios en EduConnect',
+        color_discrete_sequence=px.colors.qualitative.Set3,
+        hole=0.3
+    )
+    fig.update_traces(textinfo='percent+label')
+
+    chart_html = fig.to_html(full_html=False)
+
+    return render(request, 'admin_dashboard/distribution.html', {
+        'chart_html': chart_html
+    })
+
