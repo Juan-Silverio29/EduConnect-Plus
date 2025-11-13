@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mis Recursos | EduConnect+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary">
+            <i class="fas fa-book-open me-2"></i> Mis Recursos
+        </h2>
+        <a href="{% url 'dashboard_user' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Volver al Dashboard
+        </a>
+    </div>
+
+    {% if materiales %}
+        <div class="row g-4">
+            {% for material in materiales %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center" style="width: 45px; height: 45px;">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="card-title mb-0">{{ material.titulo }}</h5>
+                                    <small class="text-muted">{{ material.categoria|default:"General" }}</small>
+                                </div>
+                            </div>
+
+                            <p class="card-text text-muted flex-grow-1">
+                                {{ material.descripcion|truncatechars:120 }}
+                            </p>
+
+                            {% if material.archivo %}
+                                <a href="{{ material.archivo.url }}" class="btn btn-sm btn-primary mt-auto" target="_blank">
+                                    <i class="fas fa-download me-1"></i> Descargar
+                                </a>
+                            {% else %}
+                                <span class="badge bg-warning text-dark mt-auto">Sin archivo adjunto</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Aún no tienes recursos asignados.</h5>
+            <p class="small text-secondary">Los materiales que suban tus profesores aparecerán aquí.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
