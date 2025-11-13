@@ -666,3 +666,145 @@ def admin_distribution_view(request):
         'chart_html': chart_html
     })
 
+@login_required
+def dashboard_user(request):
+    """
+    Vista principal del dashboard para estudiantes con datos dinámicos
+    """
+    alumno = request.user
+
+    try:
+        # Cursos en los que está inscrito
+        cursos_inscritos = Inscripcion.objects.filter(alumno=alumno, activa=True)
+        user_cursos_count = cursos_inscritos.count()
+
+        # Recursos totales de esos cursos
+        cursos_ids = cursos_inscritos.values_list('curso', flat=True)
+        recursos = MaterialDidactico.objects.filter(curso__in=cursos_ids, visible=True)
+
+        # Recursos completados según actividad del usuario
+        recursos_completados = UserActivity.objects.filter(
+            user=alumno,
+            actividad__icontains="visto material"
+        ).count()
+
+        # Tiempo de estudio total
+        total_minutos = LearningSession.objects.filter(user=alumno).aggregate(
+            total=models.Sum('duracion_minutos')
+        )['total'] or 0
+        tiempo_estudio = round(total_minutos / 60)  # en horas
+
+        # Logros obtenidos según evaluaciones completadas
+        logros_obtenidos = UserActivity.objects.filter(
+            user=alumno,
+            actividad__icontains="evaluacion completada"
+        ).count()
+
+        # Recursos nuevos: materiales que no ha visto
+        vistos_ids = UserActivity.objects.filter(
+            user=alumno,
+            actividad__icontains="visto material"
+        ).values_list('detalles', flat=True)
+        
+        # Filtrar IDs válidos
+        recursos_vistos_ids = []
+        for vid in vistos_ids:
+            if vid and vid.isdigit():
+                recursos_vistos_ids.append(int(vid))
+        
+        recursos_nuevos = recursos.exclude(id__in=recursos_vistos_ids).count()
+
+    except Exception as e:
+        # En caso de error, usar valores por defecto
+        print(f"Error calculando estadísticas: {e}")
+        user_cursos_count = 0
+        recursos_completados = 0
+        tiempo_estudio = 0
+        logros_obtenidos = 0
+        recursos_nuevos = 0
+
+    context = {
+        'user_cursos_count': user_cursos_count,
+        'recursos_completados': recursos_completados,
+        'tiempo_estudio': tiempo_estudio,
+        'logros_obtenidos': logros_obtenidos,
+        'recursos_nuevos': recursos_nuevos,
+    }
+
+    return render(request, 'dashboard_user.html', context)
+
+@login_required
+def dashboard_profesor(request):
+    profesor = request.user
+
+    # Cursos activos creados por el profesor
+    cursos_activos = Curso.objects.filter(profesor=profesor).count()
+    
+    # Cursos recientes para mostrar
+    cursos = Curso.objects.filter(profesor=profesor).order_by('-fecha_creacion')[:4]
+
+    # Alumnos inscritos en los cursos del profesor
+    alumnos_inscritos = Inscripcion.objects.filter(curso__profesor=profesor).count()
+
+    # Materiales subidos por el profesor
+    materiales_subidos = MaterialDidactico.objects.filter(profesor=profesor).count()
+
+    # Evaluaciones próximas
+    from datetime import date
+    evaluaciones = Evaluacion.objects.filter(
+        profesor=profesor, 
+        fecha__gte=date.today()
+    ).order_by('fecha')[:5]
+
+    # Tareas revisadas (puedes ajustar esta lógica según tu modelo)
+    tareas_revisadas = 0  # Por ahora lo dejamos en 0
+
+    context = {
+        "cursos_activos": cursos_activos,
+        "alumnos_inscritos": alumnos_inscritos,
+        "tareas_revisadas": tareas_revisadas,
+        "material_subido": materiales_subidos,
+        "cursos": cursos,
+        "evaluaciones": evaluaciones,
+    }
+
+    return render(request, "dashboard_profesor.html", context)
+
+@login_required
+def logros_recursos_completados(request):
+    """
+    Vista para mostrar el progreso y logros del estudiante
+    """
+    alumno = request.user
+    
+    # Obtener datos del progreso (similar a dashboard_user)
+    cursos_inscritos = Inscripcion.objects.filter(alumno=alumno, activa=True).select_related('curso')
+    user_cursos_count = cursos_inscritos.count()
+    
+    # Recursos completados
+    recursos_completados = UserActivity.objects.filter(
+        user=alumno,
+        actividad__icontains="visto material"
+    ).count()
+    
+    # Tiempo de estudio
+    total_minutos = LearningSession.objects.filter(user=alumno).aggregate(
+        total=models.Sum('duracion_minutos')
+    )['total'] or 0
+    tiempo_estudio = round(total_minutos / 60)
+    
+    # Logros obtenidos
+    logros_obtenidos = UserActivity.objects.filter(
+        user=alumno,
+        actividad__icontains="evaluacion completada"
+    ).count()
+    
+    context = {
+        'user_cursos_count': user_cursos_count,
+        'recursos_completados': recursos_completados,
+        'tiempo_estudio': tiempo_estudio,
+        'logros_obtenidos': logros_obtenidos,
+        'cursos_inscritos': cursos_inscritos,
+    }
+    
+    return render(request, 'progreso_estudiante.html', context)
