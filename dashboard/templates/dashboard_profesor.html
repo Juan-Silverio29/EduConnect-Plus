@@ -315,7 +315,7 @@
   </div>
 
   <!-- Chat IA Integrado (si pertenece a grupos Profesor/Alumno) -->
-  {% if user.groups.filter.name__in=['Profesor', 'Alumno'].exists or user.is_staff %}
+  {% if user.is_staff or user.groups.all|dictsort:"name"|yesno:"yes,no" %}
   <div id="chat-ia">
     <h3 class="font-semibold text-lg mb-2">🤖 Asistente IA</h3>
     <div id="chat-messages">
@@ -409,7 +409,7 @@
             }, 500);
 
             // Para usar la API real, descomenta esto:
-            /*
+            
             try {
               const res = await fetch('/dashboard/ai/chat/', {
                 method: 'POST',
@@ -424,7 +424,7 @@
             } catch (error) {
               chatMessagesIntegrated.innerHTML += `<div class="text-red-600"><b>IA:</b> Error de conexión</div>`;
             }
-            */
+            
             
             chatMessagesIntegrated.scrollTop = chatMessagesIntegrated.scrollHeight;
           }
