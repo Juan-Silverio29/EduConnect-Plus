@@ -1,14 +1,12 @@
+# resources/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Recursos
-from .forms import RecursoForm
+from .forms import RecursoForm, EntregaAlumnoForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from dashboard.models import Curso, MaterialDidactico, Inscripcion
-from .models import EntregaAlumno  
-from .forms import EntregaAlumnoForm
+from dashboard.models import Curso, MaterialDidactico, Inscripcion, EntregaAlumno
 import os  
 
-# 📌 Lista de recursos (solo los del usuario, admin ve todos)
 @login_required
 def lista_recursos(request):
     """
@@ -17,7 +15,7 @@ def lista_recursos(request):
     cursos_inscritos = Curso.objects.filter(inscritos__alumno=request.user)
     materiales = MaterialDidactico.objects.filter(curso__in=cursos_inscritos).order_by('-fecha_subida')
 
-    # Filtrar por curso si se selecciona en un select (opcional)
+    # Filtrar por curso si se selecciona
     curso_id = request.GET.get("curso")
     if curso_id:
         materiales = materiales.filter(curso_id=curso_id)
@@ -48,10 +46,11 @@ def lista_recursos(request):
 
             entrega.save()
             messages.success(request, "✅ Archivo subido correctamente.")
-            return redirect('lista_recursos')  # Ajusta el nombre según tus urls
+            return redirect('resources:lista_recursos')
     else:
         form = EntregaAlumnoForm()
 
+    # Obtener entregas del alumno
     entregas = EntregaAlumno.objects.filter(alumno=request.user).order_by('-fecha_subida')
 
     return render(request, "lista_recursos.html", {
@@ -63,9 +62,6 @@ def lista_recursos(request):
 
 @login_required
 def lista_cursos(request):
-    """
-    Muestra todos los cursos disponibles y permite al alumno inscribirse.
-    """
     cursos = Curso.objects.all().select_related("profesor")
     inscritos_ids = Inscripcion.objects.filter(alumno=request.user).values_list("curso_id", flat=True)
 
@@ -77,24 +73,18 @@ def lista_cursos(request):
 
 @login_required
 def inscribirse_curso(request, curso_id):
-    """
-    Inscribe al alumno en un curso (si no lo estaba ya).
-    """
     curso = get_object_or_404(Curso, id=curso_id)
-
     inscripcion, creada = Inscripcion.objects.get_or_create(alumno=request.user, curso=curso)
+    
     if creada:
         messages.success(request, f"✅ Te has inscrito al curso: {curso.nombre}")
     else:
         messages.info(request, f"Ya estás inscrito en el curso: {curso.nombre}")
 
-    return redirect("lista_cursos")
+    return redirect("resources:lista_cursos")
 
 @login_required
 def darse_baja_curso(request, curso_id):
-    """
-    Permite al alumno darse de baja del curso.
-    """
     inscripcion = Inscripcion.objects.filter(curso_id=curso_id, alumno=request.user).first()
     if inscripcion:
         inscripcion.delete()
@@ -102,61 +92,55 @@ def darse_baja_curso(request, curso_id):
     else:
         messages.warning(request, "⚠️ No estabas inscrito en este curso.")
 
-    return redirect('lista_cursos')
+    return redirect('resources:lista_cursos')
 
-# 📍 Subir recurso nuevo
 @login_required
 def subir_recurso(request):
     if request.method == "POST":
         form = RecursoForm(request.POST, request.FILES)
         if form.is_valid():
             recurso = form.save(commit=False)
-            recurso.autor = request.user  # 👈 Guardar quién subió el recurso
+            recurso.autor = request.user
             recurso.save()
             messages.success(request, "✅ Recurso subido correctamente.")
-            return redirect("lista_recursos")
+            return redirect("resources:lista_recursos")
     else:
         form = RecursoForm()
     return render(request, "subir_recurso.html", {"form": form})
 
-
-# 📍 Editar recurso (solo el autor o admin)
 @login_required
 def editar_recurso(request, recurso_id):
     recurso = get_object_or_404(Recursos, id=recurso_id)
-
+    
     if recurso.autor != request.user and not request.user.is_superuser:
         messages.warning(request, "⚠️ No tienes permiso para editar este recurso.")
-        return redirect("lista_recursos")
+        return redirect("resources:lista_recursos")
 
     if request.method == "POST":
         form = RecursoForm(request.POST, request.FILES, instance=recurso)
         if form.is_valid():
             form.save()
             messages.success(request, "✅ Recurso actualizado correctamente.")
-            return redirect("lista_recursos")
+            return redirect("resources:lista_recursos")
     else:
         form = RecursoForm(instance=recurso)
     return render(request, "editar_recurso.html", {"form": form, "recurso": recurso})
 
-
-# 📍 Eliminar recurso (solo el autor o admin)
 @login_required
 def eliminar_recurso(request, recurso_id):
     recurso = get_object_or_404(Recursos, id=recurso_id)
 
     if recurso.autor != request.user and not request.user.is_superuser:
         messages.warning(request, "⚠️ No puedes eliminar un recurso que no es tuyo.")
-        return redirect("lista_recursos")
+        return redirect("resources:lista_recursos")
 
     if request.method == "POST":
         recurso.delete()
         messages.success(request, "🗑️ Recurso eliminado correctamente.")
-        return redirect("lista_recursos")
+        return redirect("resources:lista_recursos")
     return render(request, "eliminar_recurso.html", {"recurso": recurso})
 
-
-# 📈 Logros y recursos completados
+@login_required
 def logros_recursos_completados(request):
     recursos = Recursos.objects.filter(completado=True)
     total_recursos = Recursos.objects.count()
@@ -181,9 +165,9 @@ def logros_recursos_completados(request):
 def eliminar_entrega(request, entrega_id):
     try:
         entrega = get_object_or_404(EntregaAlumno, id=entrega_id, alumno=request.user)
-        # 🔹 Si tiene archivo físico, también lo borramos
+        
+        # Eliminar archivo físico
         if entrega.archivo and entrega.archivo.path:
-            import os
             if os.path.exists(entrega.archivo.path):
                 os.remove(entrega.archivo.path)
 
@@ -193,4 +177,3 @@ def eliminar_entrega(request, entrega_id):
         messages.error(request, f"⚠️ No se pudo eliminar la entrega: {e}")
 
     return redirect('resources:lista_recursos')
-

@@ -79,10 +79,12 @@ class Evaluacion(models.Model):
 class UserActivity(models.Model):
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     actividad = models.CharField(max_length=255)
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, null=True, blank=True)  # ✅ agregado
     fecha = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.actividad}"
+
 
 
 from django.db import models
@@ -96,3 +98,74 @@ class LearningSession(models.Model):
 
     def __str__(self):
         return f"Sesión de {self.user.username} - {self.duracion_minutos} min"
+
+ #📝 Modelo para entregas de alumnos
+"""class EntregaAlumno(models.Model):
+    alumno = models.ForeignKey(User, on_delete=models.CASCADE, related_name="entregas")
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name="entregas_alumnos")
+    titulo = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True, null=True)
+    archivo = models.FileField(upload_to='entregas_alumnos/')
+    fecha_entrega = models.DateTimeField(auto_now_add=True)
+    calificacion = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    comentario_profesor = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-fecha_entrega']
+
+    def __str__(self):
+        return f"{self.titulo} - {self.alumno.username}"""
+
+# 📝 Modelo para entregas de alumnos - AGREGA ESTO AL FINAL
+class EntregaAlumno(models.Model):
+    alumno = models.ForeignKey(User, on_delete=models.CASCADE)
+    titulo = models.CharField(max_length=200)
+    archivo = models.FileField(upload_to='entregas/')
+    fecha_subida = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.titulo
+
+class Actividad(models.Model):
+    TIPOS = [
+        ("video", "Video"),
+        ("lectura", "Lectura"),
+        ("tarea", "Tarea"),
+        ("examen", "Examen"),
+    ]
+
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name="actividades")
+    titulo = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=TIPOS)
+    descripcion = models.TextField(blank=True, null=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.titulo} ({self.curso.nombre})"
+
+class Tarea(models.Model):
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='tareas')
+    titulo = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    fecha_publicacion = models.DateTimeField(auto_now_add=True)
+    fecha_entrega = models.DateTimeField(null=True, blank=True)
+    puntos = models.PositiveIntegerField(default=10)
+
+    def __str__(self):
+        return f"{self.titulo} ({self.curso.nombre})"
+
+
+class EntregaTarea(models.Model):
+    tarea = models.ForeignKey(Tarea, on_delete=models.CASCADE, related_name='entregas')
+    alumno = models.ForeignKey(User, on_delete=models.CASCADE)
+    archivo = models.FileField(upload_to='entregas_tareas/', blank=True, null=True)
+    texto = models.TextField(blank=True, null=True)
+    fecha_entrega = models.DateTimeField(auto_now_add=True)
+    calificacion = models.FloatField(null=True, blank=True)
+    retroalimentacion = models.TextField(blank=True, null=True)
+
+    class Meta:
+        unique_together = ('tarea', 'alumno')  # Un alumno solo una entrega
+
+    def __str__(self):
+        return f"Entrega de {self.alumno.username} para {self.tarea.titulo}"
