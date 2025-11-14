@@ -1,26 +1,22 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.db import models
+from django.contrib.auth.models import User
 
+# Modelos del dashboard y otros módulos
+from dashboard.models import UserActivity, LearningSession
+from dashboard.models import Curso, Inscripcion, MaterialDidactico, Evaluacion
 from auth_app.models import PerfilUsuario
 from forum.models import Foro
-from .models import MaterialDidactico
-from .models import Curso, Inscripcion, MaterialDidactico
-from .forms import MaterialForm
-from django.shortcuts import render, redirect
-from auth_app.models import PerfilUsuario 
-from django.contrib import messages
-from django.shortcuts import get_object_or_404
-from forum.models import Foro
-from .forms import EvaluacionForm
-from .models import Evaluacion
-from django.db import models
-from .forms import CursoForm
+from dashboard.models import UserActivity
+
+# Formularios
+from .forms import CursoForm, MaterialForm, EvaluacionForm
+
 import os
-from django.http import JsonResponse
-from django.contrib.auth.models import User
+
 
 # ---------------------------
 # Redirección según el rol
@@ -778,7 +774,7 @@ def logros_recursos_completados(request):
     alumno = request.user
     
     # Obtener datos del progreso (similar a dashboard_user)
-    cursos_inscritos = Inscripcion.objects.filter(alumno=alumno, activa=True).select_related('curso')
+    cursos_inscritos = Inscripcion.objects.filter(alumno=alumno).select_related('curso')
     user_cursos_count = cursos_inscritos.count()
     
     # Recursos completados
