@@ -63,12 +63,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'core.urls'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "core" / "templates"],
+        'DIRS': [
+            BASE_DIR / "core" / "templates",
+            BASE_DIR / "dashboard" / "templates",  # 👈 correcto aquí dentro
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -79,6 +80,9 @@ TEMPLATES = [
         },
     },
 ]
+
+ROOT_URLCONF = 'core.urls'
+
 
 WSGI_APPLICATION = 'core.wsgi.application'
 

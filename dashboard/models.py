@@ -76,3 +76,23 @@ class Evaluacion(models.Model):
 
     def __str__(self):
         return f"{self.nombre} - {self.curso.nombre}"
+class UserActivity(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    actividad = models.CharField(max_length=255)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.actividad}"
+
+
+from django.db import models
+from django.contrib.auth.models import User
+
+class LearningSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    inicio = models.DateTimeField(auto_now_add=True)
+    fin = models.DateTimeField(null=True, blank=True)
+    duracion_minutos = models.FloatField(default=0)
+
+    def __str__(self):
+        return f"Sesión de {self.user.username} - {self.duracion_minutos} min"
