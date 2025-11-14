@@ -778,7 +778,7 @@ def logros_recursos_completados(request):
     alumno = request.user
     
     # Obtener datos del progreso (similar a dashboard_user)
-    cursos_inscritos = Inscripcion.objects.filter(alumno=alumno, activa=True).select_related('curso')
+    cursos_inscritos = Inscripcion.objects.filter(alumno=alumno).select_related('curso')
     user_cursos_count = cursos_inscritos.count()
     
     # Recursos completados
